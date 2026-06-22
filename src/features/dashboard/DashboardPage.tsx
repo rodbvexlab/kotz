@@ -1,27 +1,18 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers'
+import { useTenant } from '@/lib/tenant'
+import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { 
-  TrendingUp, 
-  Send, 
-  CheckCircle2, 
-  LayoutGrid, 
-  LogOut, 
+import {
+  TrendingUp,
+  Send,
+  CheckCircle2,
+  LayoutGrid,
+  LogOut,
   BarChart3,
   Sparkles
 } from 'lucide-react'
-
-export interface DashboardProps {
-  metrics: {
-    total_leads: number
-    total_propostas: number
-    fechados_mes: number
-    taxa_conversao: number
-  } | null
-  loading: boolean
-  tenantName: string
-}
 
 // Dados mockados para o gráfico SVG de conversão
 const MOCK_GRAPH_DATA = [
@@ -33,9 +24,18 @@ const MOCK_GRAPH_DATA = [
   { period: 'Semana 6', rate: 28, leads: 15 },
 ]
 
-export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) {
+function capitalizeWords(str: string) {
+  return str.replace(/\b\w/g, c => c.toUpperCase())
+}
+
+export function DashboardPage() {
   const { signOut } = useAuth()
+  const { tenant } = useTenant()
+  const { metrics, loading } = useDashboardMetrics()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
+  // Nome capitalizado do tenant
+  const tenantName = capitalizeWords(tenant?.name ?? '')
 
   const maxRate = Math.max(...MOCK_GRAPH_DATA.map(d => d.rate), 30)
 
@@ -60,7 +60,7 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
   }, '')
 
   // Constroi string do path do gráfico de área
-  const areaD = points.length > 0 
+  const areaD = points.length > 0
     ? `${lineD} L ${points[points.length - 1].x} ${svgHeight - paddingY} L ${points[0].x} ${svgHeight - paddingY} Z`
     : ''
 
@@ -77,7 +77,7 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-[#FF6500] selection:text-white">
+    <div className="relative min-h-screen bg-black text-white flex flex-col font-sans selection:bg-[#FF6500] selection:text-white">
       {/* Header */}
       <header className="border-b border-[#1E3E62]/30 px-6 py-4 flex items-center justify-between shrink-0 bg-[#0B192C]/40 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-4">
@@ -99,7 +99,7 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
               className="flex items-center gap-1.5 text-sm text-[#A1B5CC] hover:text-white px-3 py-1.5 rounded-lg hover:bg-[#1E3E62]/20 transition-all"
             >
               <LayoutGrid size={14} />
-              Pipeline
+              Pipeline →
             </Link>
           </nav>
         </div>
@@ -122,13 +122,13 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto space-y-8 overflow-y-auto">
+      <main className="relative flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto space-y-8 overflow-y-auto">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
             Olá{tenantName ? `, ${tenantName}` : ''} 👋
           </h1>
           <p className="text-sm text-[#A1B5CC] mt-1">
-            Aqui está o desempenho dos leads da sua agência criativa para este período.
+            Visão geral do seu funil
           </p>
         </div>
 
@@ -190,7 +190,7 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 mt-4 text-[10px] font-mono text-[#A1B5CC]/60">
-                  <span className="text-emerald-400 font-semibold">{metrics.taxa_conversao}% de conversão</span>
+                  <span className="text-emerald-400 font-semibold">{metrics.taxa_conversao.toFixed(1)}% de conversão</span>
                   <span>geral no mês</span>
                 </div>
               </GlassCard>
@@ -213,8 +213,8 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
 
               {/* SVG Area Chart wrapper */}
               <div className="relative w-full overflow-x-auto min-h-[220px]">
-                <svg 
-                  viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
+                <svg
+                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
                   className="w-full min-w-[500px] h-auto block select-none"
                 >
                   {/* Grids and Axes */}
@@ -236,13 +236,13 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
 
                   {/* Line path */}
                   {lineD && (
-                    <path 
-                      d={lineD} 
-                      fill="none" 
-                      stroke="#FF6500" 
-                      strokeWidth="2.5" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
+                    <path
+                      d={lineD}
+                      fill="none"
+                      stroke="#FF6500"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   )}
 
@@ -253,13 +253,13 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
                       <g key={i}>
                         {/* Vertical hover guide line */}
                         {isHovered && (
-                          <line 
-                            x1={p.x} 
-                            y1={paddingY} 
-                            x2={p.x} 
-                            y2={svgHeight - paddingY} 
-                            stroke="#FF6500" 
-                            strokeWidth="1" 
+                          <line
+                            x1={p.x}
+                            y1={paddingY}
+                            x2={p.x}
+                            y2={svgHeight - paddingY}
+                            stroke="#FF6500"
+                            strokeWidth="1"
                             strokeDasharray="2 2"
                           />
                         )}
@@ -279,12 +279,12 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
                         </text>
 
                         {/* Y Axis rates on the line dots */}
-                        <circle 
-                          cx={p.x} 
-                          cy={p.y} 
-                          r={isHovered ? 6 : 4} 
-                          fill={isHovered ? '#FF6500' : '#0B192C'} 
-                          stroke="#FF6500" 
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r={isHovered ? 6 : 4}
+                          fill={isHovered ? '#FF6500' : '#0B192C'}
+                          stroke="#FF6500"
                           strokeWidth={isHovered ? 2.5 : 1.5}
                           className="transition-all duration-150"
                         />
@@ -341,4 +341,3 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
     </div>
   )
 }
-

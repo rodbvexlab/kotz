@@ -41,16 +41,7 @@ export function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage
-                metrics={{
-                  total_leads: 24,
-                  total_propostas: 15,
-                  fechados_mes: 8,
-                  taxa_conversao: 28
-                }}
-                loading={false}
-                tenantName="Être Creative"
-              />
+              <DashboardPage />
             </ProtectedRoute>
           }
         />
