@@ -11,15 +11,21 @@ export function useTenant() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
-      const { data } = await supabase
+      const { data: tenantUser } = await supabase
         .from('tenant_users')
-        .select('tenant_id, tenants(*)')
+        .select('tenant_id')
         .eq('user_id', user.id)
         .single()
 
-      if (data?.tenants) {
-        setTenant(data.tenants as unknown as Tenant)
-      }
+      if (!tenantUser?.tenant_id) { setLoading(false); return }
+
+      const { data: tenantData } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('id', tenantUser.tenant_id)
+        .single()
+
+      if (tenantData) setTenant(tenantData)
       setLoading(false)
     }
 

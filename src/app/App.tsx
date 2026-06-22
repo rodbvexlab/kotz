@@ -42,6 +42,10 @@ export function App() {
           element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
         />
         <Route
+          path="/pipeline"
+          element={<ProtectedRoute><PipelinePage /></ProtectedRoute>}
+        />
+        <Route
           path="/leads"
           element={<ProtectedRoute><PipelinePage /></ProtectedRoute>}
         />
