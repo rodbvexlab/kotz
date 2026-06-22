@@ -1,0 +1,26 @@
+/* SVG filter para efeito liquid/distortion sutil */
+.glass-distort {
+  filter: url(#glass-distort);
+}
+
+/* Shimmer animation no hover dos metric cards */
+@keyframes glass-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.glass-metric:hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255,101,0,0.06) 50%,
+    transparent 60%
+  );
+  background-size: 200% auto;
+  animation: glass-shimmer 1.5s ease;
+  border-radius: inherit;
+  pointer-events: none;
+}

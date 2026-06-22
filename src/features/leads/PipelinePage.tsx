@@ -4,6 +4,7 @@ import { LayoutGrid, LogOut, AlertCircle } from 'lucide-react'
 import { KanbanBoard } from './components/KanbanBoard'
 import { LeadPanel } from './components/LeadPanel'
 import { useLeadsSync } from './hooks/useLeadsSync'
+import { useLeadInteractions } from './hooks/useLeadInteractions'
 import { useTenant } from '@/lib/tenant'
 import { useAuth } from '@/app/providers'
 import type { Lead } from '@/types/pipeline'
@@ -15,46 +16,12 @@ export function PipelinePage() {
   const [activeLead, setActiveLead] = useState<Lead | null>(null)
   const [searchParams] = useSearchParams()
 
-  // Gerenciamento de interações para o LeadPanel
-  const [interactions, setInteractions] = useState<any[]>([])
-  const [loadingInteractions, setLoadingInteractions] = useState(false)
-
-  useEffect(() => {
-    if (!activeLead) {
-      setInteractions([])
-      return
-    }
-    setLoadingInteractions(true)
-    const timer = setTimeout(() => {
-      setInteractions([
-        {
-          id: 'mock-1',
-          lead_id: activeLead.id,
-          content: `Lead qualificado para o serviço de ${activeLead.service || 'Design/Branding'}. Conversado sobre escopo do projeto.`,
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'mock-2',
-          lead_id: activeLead.id,
-          content: 'Contato telefônico realizado. Demonstrou interesse no plano de branding e site institucional.',
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        }
-      ])
-      setLoadingInteractions(false)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [activeLead])
-
-  const handleAddInteraction = async (note: string) => {
-    if (!activeLead) return
-    const newAct = {
-      id: Math.random().toString(36).substring(7),
-      lead_id: activeLead.id,
-      content: note,
-      created_at: new Date().toISOString()
-    }
-    setInteractions(prev => [newAct, ...prev])
-  }
+  // Hook real de interações — conectado ao Supabase
+  const {
+    interactions,
+    loading: loadingInteractions,
+    addInteraction: onAddInteraction,
+  } = useLeadInteractions(activeLead?.id ?? null)
 
   // Restaura panel se URL tiver ?leadId=
   useEffect(() => {
@@ -154,7 +121,7 @@ export function PipelinePage() {
         onClose={() => setActiveLead(null)}
         interactions={interactions}
         loadingInteractions={loadingInteractions}
-        onAddInteraction={handleAddInteraction}
+        onAddInteraction={onAddInteraction}
       />
     </div>
   )

@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { X, Instagram, MessageCircle, Users, Calendar, PlusCircle, Sparkles } from 'lucide-react'
 import type { Lead } from '@/types/pipeline'
-
-export interface LeadInteraction {
-  id: string
-  lead_id: string
-  content: string
-  created_at: string
-}
+import type { LeadInteraction } from '@/types/database'
+import { GlassCard } from '@/components/ui/GlassCard'
 
 export interface LeadPanelProps {
   lead: Lead | null
@@ -132,7 +127,7 @@ export function LeadPanel({
         {lead && (
           <>
             {/* Header */}
-            <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-[#1E3E62]/20">
+            <GlassCard variant="overlay" className="flex items-start justify-between px-6 pt-6 pb-4">
               <div className="flex-1 pr-4">
                 <h2 className="text-xl font-bold text-white tracking-tight leading-tight">{lead.name}</h2>
                 {lead.service && (
@@ -148,7 +143,7 @@ export function LeadPanel({
               >
                 <X size={16} />
               </button>
-            </div>
+            </GlassCard>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
@@ -276,7 +271,7 @@ export function LeadPanel({
 
                           {/* Conteúdo */}
                           <p className="text-sm text-white/95 mt-1 leading-relaxed whitespace-pre-wrap font-sans">
-                            {item.content}
+                            {item.note}
                           </p>
                         </div>
                       )

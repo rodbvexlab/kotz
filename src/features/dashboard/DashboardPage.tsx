@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers'
+import { GlassCard } from '@/components/ui/GlassCard'
 import { 
   TrendingUp, 
   Send, 
@@ -8,7 +9,6 @@ import {
   LayoutGrid, 
   LogOut, 
   BarChart3,
-  Percent,
   Sparkles
 } from 'lucide-react'
 
@@ -137,7 +137,7 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
             {/* 3 Metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1: Leads Ativos */}
-              <div className="bg-[#0B192C] border border-[#1E3E62]/30 rounded-xl p-6 shadow-md hover:border-[#1E3E62]/60 transition-all group relative overflow-hidden">
+              <GlassCard variant="metric" accentColor="#1E3E62" className="p-6 group relative">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1E3E62] group-hover:bg-[#FF6500] transition-colors" />
                 <div className="flex items-start justify-between">
                   <div>
@@ -154,10 +154,10 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
                   <Sparkles size={12} className="text-[#FF6500]" />
                   <span>Em progresso no funil de vendas</span>
                 </div>
-              </div>
+              </GlassCard>
 
               {/* Card 2: Propostas Enviadas */}
-              <div className="bg-[#0B192C] border border-[#1E3E62]/30 rounded-xl p-6 shadow-md hover:border-[#1E3E62]/60 transition-all group relative overflow-hidden">
+              <GlassCard variant="metric" accentColor="#1E3E62" className="p-6 group relative">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1E3E62] group-hover:bg-[#FF6500] transition-colors" />
                 <div className="flex items-start justify-between">
                   <div>
@@ -173,10 +173,10 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
                 <div className="flex items-center gap-1.5 mt-4 text-[10px] font-mono text-[#A1B5CC]/60">
                   <span>Aguardando retorno comercial</span>
                 </div>
-              </div>
+              </GlassCard>
 
               {/* Card 3: Fechados no Mês */}
-              <div className="bg-[#0B192C] border border-[#FF6500]/20 hover:border-[#FF6500]/40 rounded-xl p-6 shadow-md shadow-[#FF6500]/5 transition-all group relative overflow-hidden">
+              <GlassCard variant="metric" accentColor="#FF6500" className="p-6 group relative">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#FF6500]" />
                 <div className="flex items-start justify-between">
                   <div>
@@ -193,7 +193,7 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
                   <span className="text-emerald-400 font-semibold">{metrics.taxa_conversao}% de conversão</span>
                   <span>geral no mês</span>
                 </div>
-              </div>
+              </GlassCard>
             </div>
 
             {/* SVG Area Chart Container */}
@@ -341,5 +341,4 @@ export function DashboardPage({ metrics, loading, tenantName }: DashboardProps) 
     </div>
   )
 }
-
 
