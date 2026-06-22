@@ -10,11 +10,12 @@ export interface LeadInteraction {
   created_at: string
 }
 
-interface LeadPanelProps {
+export interface LeadPanelProps {
   lead: Lead | null
   onClose: () => void
-  interactions?: LeadInteraction[]
-  onAddInteraction?: (content: string) => void | Promise<void>
+  interactions: LeadInteraction[]
+  loadingInteractions: boolean
+  onAddInteraction: (note: string) => Promise<void>
 }
 
 const CHANNEL_META = {
@@ -56,40 +57,18 @@ function formatInteractionDate(iso: string) {
   }).format(date)
 }
 
-export function LeadPanel({ lead, onClose, interactions: propsInteractions, onAddInteraction }: LeadPanelProps) {
+export function LeadPanel({ 
+  lead, 
+  onClose, 
+  interactions, 
+  loadingInteractions, 
+  onAddInteraction 
+}: LeadPanelProps) {
   const [, setSearchParams] = useSearchParams()
   const open = !!lead
 
   const [newContent, setNewContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [localInteractions, setLocalInteractions] = useState<LeadInteraction[]>([])
-
-  // Sincroniza interações locais com props e carrega dados padrão caso vazias
-  useEffect(() => {
-    if (!lead) return
-
-    if (propsInteractions && propsInteractions.length > 0) {
-      setLocalInteractions(propsInteractions)
-      return
-    }
-
-    // Mock realista de interações caso nenhuma venha via props (MVP)
-    const mockList: LeadInteraction[] = [
-      {
-        id: 'mock-1',
-        lead_id: lead.id,
-        content: `Lead qualificado para o serviço de ${lead.service || 'Design/Branding'}. Conversado sobre escopo do projeto.`,
-        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // ontem
-      },
-      {
-        id: 'mock-2',
-        lead_id: lead.id,
-        content: `Contato telefônico realizado. Demonstrou interesse no plano de branding e site institucional.`,
-        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2h atrás
-      }
-    ]
-    setLocalInteractions(mockList)
-  }, [lead, propsInteractions])
 
   // Sync URL quando abre/fecha
   useEffect(() => {
@@ -115,18 +94,7 @@ export function LeadPanel({ lead, onClose, interactions: propsInteractions, onAd
 
     setIsSaving(true)
     try {
-      if (onAddInteraction) {
-        await onAddInteraction(newContent.trim())
-      }
-      
-      const newAct: LeadInteraction = {
-        id: Math.random().toString(36).substring(7),
-        lead_id: lead.id,
-        content: newContent.trim(),
-        created_at: new Date().toISOString()
-      }
-
-      setLocalInteractions(prev => [newAct, ...prev])
+      await onAddInteraction(newContent.trim())
       setNewContent('')
     } catch (err) {
       console.error('Erro ao salvar interação:', err)
@@ -134,6 +102,11 @@ export function LeadPanel({ lead, onClose, interactions: propsInteractions, onAd
       setIsSaving(false)
     }
   }
+
+  // Ordena interações por data de criação decrescente (mais recente primeiro)
+  const sortedInteractions = [...interactions].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
 
   return (
     <>
@@ -262,29 +235,39 @@ export function LeadPanel({ lead, onClose, interactions: propsInteractions, onAd
               <div className="space-y-3">
                 <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider">Histórico de Interações</p>
                 
-                {localInteractions.length === 0 ? (
+                {loadingInteractions ? (
+                  <div className="flex flex-col items-center justify-center p-8 gap-3">
+                    <div className="w-5 h-5 border-2 border-[#FF6500] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[10px] font-mono text-[#A1B5CC]/60">Carregando timeline...</p>
+                  </div>
+                ) : sortedInteractions.length === 0 ? (
                   <div className="rounded-xl border border-[#1E3E62]/15 bg-black/10 p-6 text-center">
                     <p className="text-xs text-[#A1B5CC]/40">Nenhuma interação registrada ainda.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col mt-4">
-                    {localInteractions.map((item, idx) => {
+                    {sortedInteractions.map((item, idx) => {
                       const isNewest = idx === 0
                       return (
                         <div key={item.id} className="relative pl-6 pb-6 last:pb-0">
                           {/* Linha vertical conectando os nós */}
-                          {idx !== localInteractions.length - 1 && (
+                          {idx !== sortedInteractions.length - 1 && (
                             <div className="absolute left-[7px] top-4 bottom-0 w-0.5 bg-[#1E3E62]/20" />
                           )}
                           
                           {/* Nó visual da Timeline */}
-                          <div className={`absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 flex items-center justify-center bg-[#0B192C] ${
-                            isNewest ? 'border-[#FF6500]' : 'border-[#1E3E62]/60'
-                          }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${
-                              isNewest ? 'bg-[#FF6500]' : 'bg-[#1E3E62]/60'
-                            }`} />
-                          </div>
+                          {isNewest ? (
+                            // Nó mais recente com pulso suave (#FF6500)
+                            <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 border-[#FF6500] flex items-center justify-center bg-[#0B192C] z-10">
+                              <div className="absolute inset-0 rounded-full bg-[#FF6500]/40 animate-ping opacity-75" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#FF6500] relative z-10" />
+                            </div>
+                          ) : (
+                            // Nós antigos (#1E3E62/60)
+                            <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 border-[#1E3E62]/60 flex items-center justify-center bg-[#0B192C]">
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#1E3E62]/60" />
+                            </div>
+                          )}
 
                           {/* Data/Hora em JetBrains Mono */}
                           <span className="block text-[10px] font-mono text-[#A1B5CC]/70 tracking-tight">
@@ -292,7 +275,7 @@ export function LeadPanel({ lead, onClose, interactions: propsInteractions, onAd
                           </span>
 
                           {/* Conteúdo */}
-                          <p className="text-sm text-white/95 mt-1 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-sm text-white/95 mt-1 leading-relaxed whitespace-pre-wrap font-sans">
                             {item.content}
                           </p>
                         </div>
@@ -315,4 +298,5 @@ export function LeadPanel({ lead, onClose, interactions: propsInteractions, onAd
     </>
   )
 }
+
 
