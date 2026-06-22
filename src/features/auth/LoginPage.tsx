@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { GlassCard } from '@/components/ui/GlassCard'
+import { Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -18,6 +21,7 @@ export function LoginPage() {
   }
 
   async function handleEmailLogin() {
+    if (!email || !password) return
     setLoading(true)
     setError(null)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -26,6 +30,7 @@ export function LoginPage() {
   }
 
   async function handleEmailSignUp() {
+    if (!email || !password) return
     setLoading(true)
     setError(null)
     const { error } = await supabase.auth.signUp({ email, password })
@@ -35,81 +40,153 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      {/* Background subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0B192C] via-black to-black pointer-events-none" />
+    <div className="min-h-screen bg-black text-white flex font-sans selection:bg-[#FF6500] selection:text-white overflow-hidden relative">
+      {/* CSS Animado para Typewriter */}
+      <style>{`
+        @keyframes typing {
+          from { width: 0 }
+          to { width: 100% }
+        }
+        @keyframes blink-caret {
+          from, to { border-color: transparent }
+          50% { border-color: #FF6500 }
+        }
+        @keyframes phrase-cycle {
+          0%, 33.33% { content: "Gerencie seus leads." }
+          33.34%, 66.66% { content: "Feche mais negócios." }
+          66.67%, 100% { content: "Cresça com clareza." }
+        }
+        .typewriter-text {
+          display: inline-block;
+          overflow: hidden;
+          border-right: 3px solid #FF6500;
+          white-space: nowrap;
+          letter-spacing: 0.03em;
+          animation: 
+            typing 3s steps(22, end) infinite alternate,
+            blink-caret 0.75s step-end infinite;
+        }
+        .typewriter-text::after {
+          content: "";
+          animation: phrase-cycle 18s infinite;
+        }
+      `}</style>
 
-      <div className="relative w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <span className="text-4xl font-bold tracking-tight">
-            <span className="text-white">Ko</span>
-            <span className="text-[#FF6500]">tz</span>
-          </span>
-          <p className="text-[#1E3E62] text-sm mt-2 tracking-wide uppercase">CRM</p>
+      {/* LADO ESQUERDO: Form card */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-[#000000] z-10 relative">
+        {/* Background glow sutil no lado esquerdo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B192C]/20 via-black to-black pointer-events-none" />
+
+        <div className="w-full max-w-md">
+          {/* Logo e cabeçalho fora do card para visual limpo */}
+          <div className="text-center mb-8">
+            <span className="text-4xl font-bold tracking-tight">
+              <span className="text-white">Ko</span>
+              <span className="text-[#FF6500]">tz</span>
+            </span>
+            <p className="text-[#1E3E62] text-xs mt-1.5 tracking-widest uppercase font-mono">CRM</p>
+          </div>
+
+          <GlassCard variant="default" className="p-8 space-y-6">
+            <div>
+              <h1 className="text-xl font-bold text-white tracking-tight">Entrar na sua conta</h1>
+              <p className="text-xs text-[#A1B5CC]/70 mt-1">Insira seus dados de acesso abaixo.</p>
+            </div>
+
+            {/* Google OAuth */}
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-lg py-2.5 text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+            >
+              <GoogleIcon />
+              Continuar com Google
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[#1E3E62]/30" />
+              <span className="text-[#A1B5CC]/50 text-xs font-medium">ou use e-mail</span>
+              <div className="flex-1 h-px bg-[#1E3E62]/30" />
+            </div>
+
+            {/* Email + Senha */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">E-mail</label>
+                <input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full bg-[#112236] border border-[#1E3E62]/50 focus:border-[#FF6500] focus:ring-1 focus:ring-[#FF6500]/25 rounded-lg px-4 py-2.5 text-white placeholder-[#1E3E62] text-sm focus:outline-none transition-all duration-200"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">Senha</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Senha"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleEmailLogin()}
+                    className="w-full bg-[#112236] border border-[#1E3E62]/50 focus:border-[#FF6500] focus:ring-1 focus:ring-[#FF6500]/25 rounded-lg pl-4 pr-10 py-2.5 text-white placeholder-[#1E3E62] text-sm focus:outline-none transition-all duration-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1B5CC] hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-xs text-[#FF6500]/90 bg-[#FF6500]/10 border border-[#FF6500]/20 rounded-lg px-3 py-2.5 font-mono">
+                {error}
+              </p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handleEmailLogin}
+                disabled={loading || !email || !password}
+                className="flex-1 bg-[#FF6500] hover:bg-[#e55a00] text-white font-semibold rounded-lg py-2.5 text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed shadow-md shadow-[#FF6500]/10"
+              >
+                Entrar
+              </button>
+              <button
+                onClick={handleEmailSignUp}
+                disabled={loading || !email || !password}
+                className="flex-1 bg-[#112236] hover:bg-[#162d47] border border-[#1E3E62]/50 text-white font-semibold rounded-lg py-2.5 text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed"
+              >
+                Criar conta
+              </button>
+            </div>
+          </GlassCard>
         </div>
+      </div>
 
-        {/* Card */}
-        <div className="bg-[#0B192C] border border-[#1E3E62]/40 rounded-xl p-8 space-y-5">
-          <h1 className="text-white text-lg font-semibold">Entrar na sua conta</h1>
+      {/* LADO DIREITO: Visual/Brand (md+) */}
+      <div 
+        className="hidden md:block md:w-1/2 border-l border-[#1E3E62]/20 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #0B192C 0%, #000000 100%)' }}
+      >
+        {/* Glow laranja sutil no centro */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,101,0,0.08)_0%,transparent_70%)] pointer-events-none" />
 
-          {/* Google OAuth — método principal */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
-          >
-            <GoogleIcon />
-            Continuar com Google
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-[#1E3E62]/40" />
-            <span className="text-[#1E3E62] text-xs">ou use e-mail</span>
-            <div className="flex-1 h-px bg-[#1E3E62]/40" />
-          </div>
-
-          {/* Email + Senha */}
-          <div className="space-y-3">
-            <input
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full bg-[#112236] border border-[#1E3E62]/50 rounded-lg px-4 py-2.5 text-white placeholder-[#1E3E62] text-sm focus:outline-none focus:border-[#FF6500] transition-colors"
-            />
-            <input
-              type="password"
-              placeholder="Senha"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleEmailLogin()}
-              className="w-full bg-[#112236] border border-[#1E3E62]/50 rounded-lg px-4 py-2.5 text-white placeholder-[#1E3E62] text-sm focus:outline-none focus:border-[#FF6500] transition-colors"
-            />
-          </div>
-
-          {error && (
-            <p className="text-xs text-[#FF6500]/80 bg-[#FF6500]/10 border border-[#FF6500]/20 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleEmailLogin}
-              disabled={loading || !email || !password}
-              className="flex-1 bg-[#FF6500] hover:bg-[#e55a00] text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-40"
-            >
-              Entrar
-            </button>
-            <button
-              onClick={handleEmailSignUp}
-              disabled={loading || !email || !password}
-              className="flex-1 bg-[#112236] hover:bg-[#162d47] border border-[#1E3E62]/50 text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-40"
-            >
-              Criar conta
-            </button>
+        <div className="absolute inset-0 flex flex-col justify-center items-center p-12">
+          <div className="max-w-md w-full text-center space-y-6 z-10">
+            <div className="min-h-[60px] flex items-center justify-center">
+              <h2 className="text-3xl font-bold tracking-tight text-white font-sans">
+                <span className="typewriter-text font-bold"></span>
+              </h2>
+            </div>
+            <p className="text-sm font-mono text-[#1E3E62] tracking-wider">— Kotz CRM</p>
           </div>
         </div>
       </div>
@@ -127,3 +204,4 @@ function GoogleIcon() {
     </svg>
   )
 }
+
