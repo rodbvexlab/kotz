@@ -6,7 +6,10 @@ export default {
       colors: {
         brand: { orange: '#FF6500', navy: '#1E3E62', dark: '#0B192C' },
       },
-      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
     },
   },
   plugins: [],
