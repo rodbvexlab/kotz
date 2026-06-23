@@ -1,0 +1,1 @@
+Quando for solicitado para adicionar um componente Morphin, você deve buscar o código-fonte dentro da pasta local .morphin/ (geralmente em .morphin/registry/ ou .morphin/components/), copiar o componente desejado para src/components/ui/ e adaptar os imports (como o cn ou tailwind-merge) para o padrão do nosso projeto Kotz.
