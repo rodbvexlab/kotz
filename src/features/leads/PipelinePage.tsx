@@ -6,6 +6,7 @@ import { LeadPanel } from './components/LeadPanel'
 import { useLeadsSync } from './hooks/useLeadsSync'
 import { useLeadInteractions } from './hooks/useLeadInteractions'
 import { AppNav } from '@/components/layout/AppNav'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 import type { Lead, LeadStatus } from '@/types/pipeline'
 
 export function PipelinePage() {
@@ -84,29 +85,32 @@ export function PipelinePage() {
             {activeCount} {activeCount === 1 ? 'lead ativo' : 'leads ativos'}
           </p>
         </div>
-        <button
-          onClick={async () => {
-            const created = await handleAddLead('Novo Lead', 'novo')
-            if (created) {
-              setIsNewLead(true)
-              setActiveLead(created)
-            }
-          }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 cursor-pointer active:scale-[0.97]"
-          style={{
-            background: 'linear-gradient(135deg, #FF6500, #e85500)',
-            boxShadow: '0 2px 12px rgba(255,101,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(255,101,0,0.40), inset 0 1px 0 rgba(255,255,255,0.15)'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.boxShadow = '0 2px 12px rgba(255,101,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)'
-          }}
-        >
-          <Plus size={16} />
-          Novo Lead
-        </button>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+          <button
+            onClick={async () => {
+              const created = await handleAddLead('Novo Lead', 'novo')
+              if (created) {
+                setIsNewLead(true)
+                setActiveLead(created)
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 cursor-pointer active:scale-[0.97]"
+            style={{
+              background: 'linear-gradient(135deg, #FF6500, #e85500)',
+              boxShadow: '0 2px 12px rgba(255,101,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(255,101,0,0.40), inset 0 1px 0 rgba(255,255,255,0.15)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.boxShadow = '0 2px 12px rgba(255,101,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)'
+            }}
+          >
+            <Plus size={16} />
+            Novo Lead
+          </button>
+        </div>
       </div>
 
       {/* Kanban */}

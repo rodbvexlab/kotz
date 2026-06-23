@@ -30,6 +30,26 @@ function addBusinessDays(from: Date, days: number): Date {
   return result
 }
 
+type NotificationKind = 'info' | 'success' | 'automation' | 'warning'
+
+// Registra uma notificação de auditoria (consumida pelo sino do PipelineHeader).
+async function notify(
+  tenantId: string,
+  title: string,
+  message: string,
+  type: NotificationKind = 'automation',
+): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser()
+  const { error } = await supabase.from('notifications').insert({
+    tenant_id: tenantId,
+    user_id: user?.id ?? null,
+    title,
+    message,
+    type,
+  })
+  if (error) console.error('[automation] notification insert error:', error)
+}
+
 const RULES: AutomationRule[] = [
   {
     trigger: (ctx) => ctx.newStatus === 'proposta_enviada' && ctx.oldStatus !== 'proposta_enviada',
@@ -49,6 +69,12 @@ const RULES: AutomationRule[] = [
         console.error('[automation] proposta follow-up error:', error)
         return
       }
+
+      await notify(
+        ctx.tenantId,
+        'Follow-up agendado',
+        `Tarefa de follow-up criada para ${ctx.leadName} (3 dias úteis).`,
+      )
 
       toast.success('Automação ativada', {
         description: 'Criei automaticamente um follow-up para daqui a 3 dias úteis.',
@@ -110,6 +136,13 @@ const RULES: AutomationRule[] = [
         created_by: user?.id ?? null,
       })
 
+      await notify(
+        ctx.tenantId,
+        'E-mail de proposta enviado',
+        `Proposta enviada automaticamente para ${contact.email}.`,
+        'success',
+      )
+
       toast.success('E-mail enviado', {
         description: `Proposta enviada automaticamente para ${contact.email}.`,
       })
@@ -133,6 +166,13 @@ const RULES: AutomationRule[] = [
         console.error('[automation] churn analysis error:', error)
         return
       }
+
+      await notify(
+        ctx.tenantId,
+        'Análise de churn agendada',
+        `Lead ${ctx.leadName} foi perdido — tarefa de análise criada (5 dias úteis).`,
+        'warning',
+      )
 
       toast.success('Automação ativada', {
         description: 'Criei uma tarefa de análise de churn para daqui a 5 dias úteis.',

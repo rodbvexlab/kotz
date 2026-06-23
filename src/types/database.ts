@@ -120,6 +120,39 @@ export interface Database {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          tenant_id: string
+          user_id: string | null
+          title: string
+          message: string | null
+          type: 'info' | 'success' | 'automation' | 'warning'
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          user_id?: string | null
+          title: string
+          message?: string | null
+          type?: 'info' | 'success' | 'automation' | 'warning'
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          user_id?: string | null
+          title?: string
+          message?: string | null
+          type?: 'info' | 'success' | 'automation' | 'warning'
+          is_read?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           id: string
@@ -258,5 +291,7 @@ export type Task = Database['public']['Tables']['tasks']['Row']
 export type TaskStatus = Task['status']
 export type LeadInteraction = Database['public']['Tables']['lead_interactions']['Row']
 export type InteractionType = LeadInteraction['type']
+export type Notification = Database['public']['Tables']['notifications']['Row']
+export type NotificationType = Notification['type']
 export type LeadStatus = Lead['status']
 export type LeadChannel = Lead['channel']
