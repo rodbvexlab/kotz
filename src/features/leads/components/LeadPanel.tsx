@@ -583,7 +583,7 @@ export function LeadPanel({
 
     try {
       // 3. Persiste no banco
-      const saved = await updateLead(lead.id, form)
+      const saved = await updateLead(lead.id, form, lead.status)
 
       // 4. Confirma com dado real do banco (updated_at real)
       onUpdateLead(saved)

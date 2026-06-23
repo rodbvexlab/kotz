@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/lib/tenant'
+import { runAutomations } from '@/lib/automations'
 import type { Lead, LeadStatus, LeadChannel } from '@/types/pipeline'
 
 export interface CompanyPayload {
@@ -32,7 +33,7 @@ export function useUpdateLead() {
   const { tenant } = useTenant()
 
   const updateLead = useCallback(
-    async (leadId: string, payload: UpdateLeadPayload): Promise<Lead> => {
+    async (leadId: string, payload: UpdateLeadPayload, previousStatus?: LeadStatus): Promise<Lead> => {
       if (!tenant) throw new Error('Tenant não encontrado')
 
       let company_id: string | null = null
@@ -132,7 +133,19 @@ export function useUpdateLead() {
         throw error
       }
 
-      return data as Lead
+      const saved = data as Lead
+
+      if (previousStatus && previousStatus !== payload.status) {
+        runAutomations({
+          leadId,
+          leadName: saved.name,
+          tenantId: tenant.id,
+          oldStatus: previousStatus,
+          newStatus: payload.status,
+        }).catch(() => {})
+      }
+
+      return saved
     },
     [tenant],
   )

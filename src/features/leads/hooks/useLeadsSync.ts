@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/lib/tenant'
+import { runAutomations } from '@/lib/automations'
 import { usePipeline } from './usePipeline'
 import type { Lead, LeadStatus } from '@/types/pipeline'
 
@@ -40,18 +41,31 @@ export function useLeadsSync() {
   // ─── 2. Move card com persist real ────────────────────────────────────────
   const handleMove = useCallback(
     (leadId: string, from: LeadStatus, to: LeadStatus) => {
+      const lead = state[from]?.find(l => l.id === leadId)
+
       moveCard(leadId, from, to, async (id, status) => {
         const { error } = await supabase
           .from('leads')
           .update({ status, updated_at: new Date().toISOString() })
           .eq('id', id)
-          .eq('tenant_id', tenant?.id ?? '')  // garante isolamento mesmo client-side
+          .eq('tenant_id', tenant?.id ?? '')
 
-        if (error) console.error('[useLeadsSync] move error:', error)
+        if (error) {
+          console.error('[useLeadsSync] move error:', error)
+        } else if (tenant) {
+          runAutomations({
+            leadId: id,
+            leadName: lead?.name ?? '',
+            tenantId: tenant.id,
+            oldStatus: from,
+            newStatus: to,
+          }).catch(() => {})
+        }
+
         return { error }
       })
     },
-    [moveCard, tenant]
+    [moveCard, tenant, state]
   )
 
   // ─── 3. Cria lead inline com tenant_id real ───────────────────────────────
