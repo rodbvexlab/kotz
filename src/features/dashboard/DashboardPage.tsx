@@ -1,16 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '@/app/providers'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
+import { AppNav } from '@/components/layout/AppNav'
 import { GlassCard } from '@/components/ui/GlassCard'
 import {
   TrendingUp,
   Send,
   CheckCircle2,
-  LayoutGrid,
-  LogOut,
-  BarChart3,
   Sparkles
 } from 'lucide-react'
 
@@ -24,18 +20,12 @@ const MOCK_GRAPH_DATA = [
   { period: 'Semana 6', rate: 28, leads: 15 },
 ]
 
-function capitalizeWords(str: string) {
-  return str.replace(/\b\w/g, c => c.toUpperCase())
-}
-
 export function DashboardPage() {
-  const { signOut } = useAuth()
   const { tenant } = useTenant()
   const { metrics, loading } = useDashboardMetrics()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  // Nome capitalizado do tenant
-  const tenantName = capitalizeWords(tenant?.name ?? '')
+  const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
 
   const maxRate = Math.max(...MOCK_GRAPH_DATA.map(d => d.rate), 30)
 
@@ -78,48 +68,7 @@ export function DashboardPage() {
 
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col font-sans selection:bg-[#FF6500] selection:text-white">
-      {/* Header */}
-      <header className="border-b border-[#1E3E62]/30 px-6 py-4 flex items-center justify-between shrink-0 bg-[#0B192C]/40 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <span className="text-lg font-bold tracking-tight">
-            <span className="text-white">Ko</span>
-            <span className="text-[#FF6500]">tz</span>
-          </span>
-          <div className="h-4 w-px bg-[#1E3E62]/30" />
-          <nav className="flex items-center gap-1.5">
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-1.5 text-sm text-white px-3 py-1.5 rounded-lg bg-[#1E3E62]/30 font-medium transition-all"
-            >
-              <BarChart3 size={14} className="text-[#FF6500]" />
-              Dashboard
-            </Link>
-            <Link
-              to="/pipeline"
-              className="flex items-center gap-1.5 text-sm text-[#A1B5CC] hover:text-white px-3 py-1.5 rounded-lg hover:bg-[#1E3E62]/20 transition-all"
-            >
-              <LayoutGrid size={14} />
-              Pipeline →
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {tenantName && (
-            <span className="text-[#A1B5CC] text-xs font-mono bg-[#1E3E62]/20 px-2.5 py-1 rounded-md border border-[#1E3E62]/30">
-              {tenantName}
-            </span>
-          )}
-          <div className="h-4 w-px bg-[#1E3E62]/30" />
-          <button
-            onClick={signOut}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#A1B5CC] hover:text-white hover:bg-[#1E3E62]/20 transition-all"
-            title="Sair"
-          >
-            <LogOut size={14} />
-          </button>
-        </div>
-      </header>
+      <AppNav />
 
       {/* Main Content */}
       <main className="relative flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto space-y-8 overflow-y-auto">
