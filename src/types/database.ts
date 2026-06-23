@@ -57,6 +57,69 @@ export interface Database {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          id: string
+          tenant_id: string
+          name: string
+          document: string | null
+          industry: string | null
+          website: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          name: string
+          document?: string | null
+          industry?: string | null
+          website?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          name?: string
+          document?: string | null
+          industry?: string | null
+          website?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      contacts: {
+        Row: {
+          id: string
+          tenant_id: string
+          company_id: string | null
+          name: string
+          email: string | null
+          phone: string | null
+          role: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          company_id?: string | null
+          name: string
+          email?: string | null
+          phone?: string | null
+          role?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          company_id?: string | null
+          name?: string
+          email?: string | null
+          phone?: string | null
+          role?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           id: string
@@ -68,6 +131,8 @@ export interface Database {
           status: 'novo' | 'em_contato' | 'proposta_enviada' | 'fechado' | 'perdido'
           notes: string | null
           assigned_to: string | null
+          company_id: string | null
+          contact_id: string | null
           created_at: string
           updated_at: string
         }
@@ -81,6 +146,8 @@ export interface Database {
           status?: 'novo' | 'em_contato' | 'proposta_enviada' | 'fechado' | 'perdido'
           notes?: string | null
           assigned_to?: string | null
+          company_id?: string | null
+          contact_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -94,6 +161,8 @@ export interface Database {
           status?: 'novo' | 'em_contato' | 'proposta_enviada' | 'fechado' | 'perdido'
           notes?: string | null
           assigned_to?: string | null
+          company_id?: string | null
+          contact_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -147,9 +216,11 @@ export interface Database {
   }
 }
 
-// Shorthand types para uso nos componentes
+// Shorthand types
 export type Tenant = Database['public']['Tables']['tenants']['Row']
 export type Lead = Database['public']['Tables']['leads']['Row']
+export type Company = Database['public']['Tables']['companies']['Row']
+export type Contact = Database['public']['Tables']['contacts']['Row']
 export type LeadInteraction = Database['public']['Tables']['lead_interactions']['Row']
 export type InteractionType = LeadInteraction['type']
 export type LeadStatus = Lead['status']

@@ -71,6 +71,8 @@ export function useLeadsSync() {
         status,
         notes: null,
         assigned_to: null,
+        company_id: null,
+        contact_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }

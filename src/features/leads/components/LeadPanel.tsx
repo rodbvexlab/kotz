@@ -6,10 +6,11 @@ import {
   X, Instagram, MessageCircle, Users, Calendar,
   PlusCircle, Sparkles, Edit2, Check, Loader2,
   ChevronDown, Phone, Mail, Video, StickyNote,
-  Send,
+  Send, Building, UserCircle,
 } from 'lucide-react'
 import type { Lead, LeadStatus, LeadChannel } from '@/types/pipeline'
-import type { LeadInteraction, InteractionType } from '@/types/database'
+import type { LeadInteraction, InteractionType, Company, Contact } from '@/types/database'
+import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useUpdateLead, type UpdateLeadPayload } from '../hooks/useUpdateLead'
 
@@ -79,6 +80,8 @@ function toForm(lead: Lead): UpdateLeadPayload {
     contact: lead.contact,
     notes:   lead.notes,
     status:  lead.status,
+    company: null,
+    contactPerson: null,
   }
 }
 
@@ -446,9 +449,32 @@ export function LeadPanel({
   const [form, setForm] = useState<UpdateLeadPayload>(lead ? toForm(lead) : toForm({
     id: '', tenant_id: '', name: '', channel: null, contact: null,
     service: null, status: 'novo', notes: null, assigned_to: null,
+    company_id: null, contact_id: null,
     created_at: '', updated_at: '',
   }))
   const [isSavingEdit, setIsSavingEdit] = useState(false)
+
+  // ── B2B associated data ────────────────────────────────────────────────────
+  const [company, setCompany] = useState<Company | null>(null)
+  const [contactPerson, setContactPerson] = useState<Contact | null>(null)
+
+  useEffect(() => {
+    if (!lead) { setCompany(null); setContactPerson(null); return }
+
+    if (lead.company_id) {
+      supabase.from('companies').select('*').eq('id', lead.company_id).single()
+        .then(({ data }) => {
+          if (data) setCompany(data as Company)
+        })
+    } else { setCompany(null) }
+
+    if (lead.contact_id) {
+      supabase.from('contacts').select('*').eq('id', lead.contact_id).single()
+        .then(({ data }) => {
+          if (data) setContactPerson(data as Contact)
+        })
+    } else { setContactPerson(null) }
+  }, [lead?.id, lead?.company_id, lead?.contact_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { updateLead } = useUpdateLead()
 
@@ -464,10 +490,17 @@ export function LeadPanel({
   // Reset form + modo quando muda de lead
   useEffect(() => {
     if (lead) {
-      setForm(toForm(lead))
+      const base = toForm(lead)
+      if (company) {
+        base.company = { name: company.name, document: company.document, industry: company.industry, website: company.website }
+      }
+      if (contactPerson) {
+        base.contactPerson = { name: contactPerson.name, email: contactPerson.email, phone: contactPerson.phone, role: contactPerson.role }
+      }
+      setForm(base)
       setMode(isNewLead ? 'edit' : 'view')
     }
-  }, [lead?.id, isNewLead]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lead?.id, isNewLead, company, contactPerson]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fecha com Escape (Esc no edit mode cancela; segundo Esc fecha)
   useEffect(() => {
@@ -506,9 +539,10 @@ export function LeadPanel({
     const snapshot = { ...lead }
 
     // 2. Optimistic: atualiza Kanban e header imediatamente
+    const { company: _c, contactPerson: _cp, ...leadFields } = form
     const optimistic: Lead = {
       ...lead,
-      ...form,
+      ...leadFields,
       updated_at: new Date().toISOString(),
     }
     onUpdateLead(optimistic)
@@ -673,6 +707,46 @@ export function LeadPanel({
                       </p>
                     )}
                   </div>
+
+                  {/* B2B: Empresa (view) */}
+                  {company && (
+                    <div className="bg-black/30 px-3 py-2.5 rounded-lg border border-[#1E3E62]/15">
+                      <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <Building size={11} className="text-[#A1B5CC]/60" />
+                        Empresa
+                      </p>
+                      <p className="text-[13px] text-white font-medium">{company.name}</p>
+                      {company.website && (
+                        <p className="text-[11px] text-[#A1B5CC]/60 font-mono mt-0.5">{company.website}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* B2B: Contato (view) */}
+                  {contactPerson && (
+                    <div className="bg-black/30 px-3 py-2.5 rounded-lg border border-[#1E3E62]/15">
+                      <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <UserCircle size={11} className="text-[#A1B5CC]/60" />
+                        Contato
+                      </p>
+                      <p className="text-[13px] text-white font-medium">{contactPerson.name}</p>
+                      {contactPerson.role && (
+                        <p className="text-[11px] text-[#A1B5CC]/60 mt-0.5">{contactPerson.role}</p>
+                      )}
+                      <div className="flex flex-wrap gap-3 mt-1.5">
+                        {contactPerson.email && (
+                          <span className="text-[11px] text-[#A1B5CC]/60 font-mono flex items-center gap-1">
+                            <Mail size={10} /> {contactPerson.email}
+                          </span>
+                        )}
+                        {contactPerson.phone && (
+                          <span className="text-[11px] text-[#A1B5CC]/60 font-mono flex items-center gap-1">
+                            <Phone size={10} /> {contactPerson.phone}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -730,6 +804,84 @@ export function LeadPanel({
                     placeholder="Detalhes sobre o lead, histórico informal…"
                     rows={4}
                   />
+
+                  {/* ── B2B: Empresa ── */}
+                  <div className="pt-2">
+                    <div className="h-px bg-[#1E3E62]/20 mb-4" />
+                    <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <Building size={11} className="text-[#A1B5CC]/60" />
+                      Dados da Empresa
+                    </p>
+                    <div className="space-y-3">
+                      <DSInput
+                        label="Razão Social / Nome"
+                        value={form.company?.name ?? ''}
+                        onChange={v => setForm(f => ({
+                          ...f,
+                          company: { ...f.company, name: v, document: f.company?.document ?? null, industry: f.company?.industry ?? null, website: f.company?.website ?? null },
+                        }))}
+                        placeholder="Nome da empresa"
+                      />
+                      <DSInput
+                        label="Website"
+                        value={form.company?.website ?? ''}
+                        onChange={v => setForm(f => ({
+                          ...f,
+                          company: { ...f.company, name: f.company?.name ?? '', website: v || null, document: f.company?.document ?? null, industry: f.company?.industry ?? null },
+                        }))}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* ── B2B: Contato ── */}
+                  <div className="pt-2">
+                    <div className="h-px bg-[#1E3E62]/20 mb-4" />
+                    <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <UserCircle size={11} className="text-[#A1B5CC]/60" />
+                      Dados do Contato
+                    </p>
+                    <div className="space-y-3">
+                      <DSInput
+                        label="Nome do contato"
+                        value={form.contactPerson?.name ?? ''}
+                        onChange={v => setForm(f => ({
+                          ...f,
+                          contactPerson: { ...f.contactPerson, name: v, email: f.contactPerson?.email ?? null, phone: f.contactPerson?.phone ?? null, role: f.contactPerson?.role ?? null },
+                        }))}
+                        placeholder="Nome da pessoa"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <DSInput
+                          label="E-mail"
+                          value={form.contactPerson?.email ?? ''}
+                          onChange={v => setForm(f => ({
+                            ...f,
+                            contactPerson: { ...f.contactPerson, name: f.contactPerson?.name ?? '', email: v || null, phone: f.contactPerson?.phone ?? null, role: f.contactPerson?.role ?? null },
+                          }))}
+                          placeholder="email@empresa.com"
+                        />
+                        <DSInput
+                          label="Telefone"
+                          value={form.contactPerson?.phone ?? ''}
+                          onChange={v => setForm(f => ({
+                            ...f,
+                            contactPerson: { ...f.contactPerson, name: f.contactPerson?.name ?? '', phone: v || null, email: f.contactPerson?.email ?? null, role: f.contactPerson?.role ?? null },
+                          }))}
+                          placeholder="+55 11 9..."
+                        />
+                      </div>
+                      <DSInput
+                        label="Cargo"
+                        value={form.contactPerson?.role ?? ''}
+                        onChange={v => setForm(f => ({
+                          ...f,
+                          contactPerson: { ...f.contactPerson, name: f.contactPerson?.name ?? '', role: v || null, email: f.contactPerson?.email ?? null, phone: f.contactPerson?.phone ?? null },
+                        }))}
+                        placeholder="Ex: Diretor de Marketing"
+                      />
+                    </div>
+                  </div>
 
                   {/* Botões de ação */}
                   <div className="flex items-center justify-end gap-3 pt-1 pb-2">

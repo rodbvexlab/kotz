@@ -17,6 +17,8 @@ export interface Lead {
   status: LeadStatus
   notes: string | null
   assigned_to: string | null
+  company_id: string | null
+  contact_id: string | null
   created_at: string
   updated_at: string
 }
