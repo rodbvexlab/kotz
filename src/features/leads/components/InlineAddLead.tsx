@@ -24,7 +24,7 @@ export function InlineAddLead({ onAdd, onCancel }: InlineAddLeadProps) {
   }
 
   return (
-    <div className="rounded-xl border border-[#FF6500]/50 bg-[#112236] p-3 ring-1 ring-[#FF6500]/20">
+    <div className="rounded-xl border border-[#FF6500]/50 bg-[#112236]/80 backdrop-blur-md p-3 ring-1 ring-[#FF6500]/20">
       <input
         ref={inputRef}
         type="text"

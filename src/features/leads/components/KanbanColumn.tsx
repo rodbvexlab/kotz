@@ -25,13 +25,13 @@ export function KanbanColumn({ column, leads, isOver, onOpenLead, onAddLead }: K
       className={[
         'flex flex-col rounded-2xl border transition-all duration-200 w-64 shrink-0',
         isDrop
-          ? 'bg-[#060f1a]/80 border-[#1E3E62]/15 opacity-70'
-          : 'bg-[#0B192C] border-[#1E3E62]/25',
+          ? 'bg-[#060f1a]/40 border-[#1E3E62]/15 opacity-60'
+          : 'bg-[#0B192C]/40 backdrop-blur-md border-[#1E3E62]/25',
         isOver && !isDrop
-          ? 'border-[#FF6500]/50 shadow-[0_0_0_1px_#FF650030] bg-[#0d1f33]'
+          ? 'border-[#FF6500]/50 shadow-[0_0_0_1px_#FF650030] bg-[#0D1F33]/40'
           : '',
         isOver && isDrop
-          ? 'border-[#1E3E62]/50 opacity-90'
+          ? 'border-[#1E3E62]/50 opacity-80 bg-[#060f1a]/60'
           : '',
       ].join(' ')}
     >

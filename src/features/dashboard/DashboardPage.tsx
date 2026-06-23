@@ -90,22 +90,17 @@ export function DashboardPage() {
           {/* 3 Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: Leads Ativos */}
-            <div className="p-6 border border-[#1E3E62]/30 border-l-[3px] border-l-[#1E3E62] bg-[#0B192C] rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]">
+            <div className="glass-metric p-6 border-l-[3px] border-l-[#1E3E62] flex flex-col items-center justify-center text-center group min-h-[160px]">
               <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Leads Ativos</p>
-              <p className="text-6xl font-black text-white mt-4 font-sans tracking-tight">
+              <p className="text-6xl font-black text-white mt-4 font-mono tracking-tight">
                 {displayMetrics.total_leads}
               </p>
-              <div className="mt-4 flex justify-center w-full">
-                <svg width="80" height="20" viewBox="0 0 80 20" fill="none" className="opacity-80">
-                  <path d="M0,15 L20,8 L40,12 L60,4 L80,10" stroke="#1E3E62" strokeOpacity="0.4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
             </div>
 
             {/* Card 2: Propostas Enviadas */}
-            <div className="p-6 border border-[#1E3E62]/30 border-l-[3px] border-l-[#FF6500]/40 bg-[#0B192C] rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]">
+            <div className="glass-metric p-6 border-l-[3px] border-l-[#F59E0B] flex flex-col items-center justify-center text-center group min-h-[160px]">
               <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Propostas Enviadas</p>
-              <p className="text-6xl font-black text-white mt-4 font-sans tracking-tight">
+              <p className="text-6xl font-black text-white mt-4 font-mono tracking-tight">
                 {displayMetrics.total_propostas}
               </p>
               {/* Progress bar container */}
@@ -120,16 +115,13 @@ export function DashboardPage() {
             </div>
 
             {/* Card 3: Fechados no Mês */}
-            <div 
-              className="p-6 border border-[#1E3E62]/30 border-l-[3px] border-l-[#FF6500] rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]"
-              style={{ background: 'linear-gradient(to bottom right, #0B192C, #0d1f33)' }}
-            >
+            <div className="glass-metric p-6 border-l-[3px] border-l-[#22C55E] flex flex-col items-center justify-center text-center group min-h-[160px]">
               <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Fechados no Mês</p>
-              <p className="text-6xl font-black text-[#FF6500] mt-4 font-sans tracking-tight">
+              <p className="text-6xl font-black text-[#22C55E] mt-4 font-mono tracking-tight">
                 {displayMetrics.fechados_mes}
               </p>
               <div className="mt-4 flex items-center justify-center">
-                <span className="bg-[#FF6500]/10 text-[#FF6500] text-xs px-2.5 py-0.5 rounded-full font-mono font-medium border border-[#FF6500]/20">
+                <span className="bg-[#22C55E]/10 text-[#22C55E] text-xs px-2.5 py-0.5 rounded-full font-mono font-medium border border-[#22C55E]/20">
                   {displayMetrics.taxa_conversao.toFixed(1)}% conversão
                 </span>
               </div>
