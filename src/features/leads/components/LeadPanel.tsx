@@ -18,7 +18,7 @@ export interface LeadPanelProps {
   onClose: () => void
   interactions: LeadInteraction[]
   loadingInteractions: boolean
-  onAddInteraction: (note: string) => Promise<void>
+  onAddInteraction: (content: string, type?: 'note' | 'call' | 'email' | 'meeting') => Promise<void>
   onUpdateLead: (updated: Lead) => void
   isNewLead?: boolean
 }
@@ -803,7 +803,7 @@ export function LeadPanel({
                             {formatInteractionDate(item.created_at)}
                           </span>
                           <p className="text-[13px] text-white/95 mt-1 leading-relaxed whitespace-pre-wrap">
-                            {item.note}
+                            {item.content}
                           </p>
                         </div>
                       )

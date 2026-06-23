@@ -102,26 +102,29 @@ export interface Database {
       lead_interactions: {
         Row: {
           id: string
-          tenant_id: string
           lead_id: string
-          user_id: string | null
-          note: string
+          tenant_id: string
+          type: 'note' | 'call' | 'email' | 'meeting'
+          content: string
+          created_by: string | null
           created_at: string
         }
         Insert: {
           id?: string
-          tenant_id: string
           lead_id: string
-          user_id?: string | null
-          note: string
+          tenant_id: string
+          type?: 'note' | 'call' | 'email' | 'meeting'
+          content: string
+          created_by?: string | null
           created_at?: string
         }
         Update: {
           id?: string
-          tenant_id?: string
           lead_id?: string
-          user_id?: string | null
-          note?: string
+          tenant_id?: string
+          type?: 'note' | 'call' | 'email' | 'meeting'
+          content?: string
+          created_by?: string | null
           created_at?: string
         }
         Relationships: []
@@ -148,5 +151,6 @@ export interface Database {
 export type Tenant = Database['public']['Tables']['tenants']['Row']
 export type Lead = Database['public']['Tables']['leads']['Row']
 export type LeadInteraction = Database['public']['Tables']['lead_interactions']['Row']
+export type InteractionType = LeadInteraction['type']
 export type LeadStatus = Lead['status']
 export type LeadChannel = Lead['channel']
