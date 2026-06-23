@@ -83,7 +83,7 @@ function initials(name: string): string {
 }
 
 function avatarColor(name: string): string {
-  const palette = ['#1E3E62', '#2a4a7f', '#0d3055', '#0891b2', '#1a5276']
+  const palette = ['#1E4D6B', '#1a5276', '#0d3b5e', '#1a4a6e', '#0e3a5c']
   return palette[name.charCodeAt(0) % palette.length]
 }
 
@@ -113,16 +113,14 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
   const statusColor = STATUS_COLOR[lead.status] || '#1E3E62'
 
   const style: React.CSSProperties = {
-    background: 'rgba(255, 255, 255, 0.05)',
-    backdropFilter: 'blur(20px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-    border: isHovered ? '1px solid rgba(255, 101, 0, 0.30)' : '1px solid rgba(255, 255, 255, 0.09)',
+    background: 'rgba(255, 255, 255, 0.04)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border: '1px solid rgba(255, 255, 255, 0.07)',
     borderLeft: `3px solid ${statusColor}`,
-    borderRadius: '12px',
-    boxShadow: isHovered
-      ? '0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(255,101,0,0.10)'
-      : '0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
+    borderRadius: '10px',
     padding: '14px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
     cursor: isDragging ? 'grabbing' : 'grab',
     opacity: isDragging ? 0.5 : 1,
     transform: transform ? CSS.Transform.toString(transform) : undefined,

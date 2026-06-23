@@ -1,9 +1,14 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { useChartData } from './hooks/useChartData'
 import { AppNav } from '@/components/layout/AppNav'
+
+const CARDS = [
+  { id: 'leads',     label: 'LEADS ATIVOS',       accent: '#4A7FA5',            key: 'total_leads'    },
+  { id: 'propostas', label: 'PROPOSTAS ENVIADAS',  accent: 'rgba(255,101,0,0.8)', key: 'total_propostas' },
+  { id: 'fechados',  label: 'FECHADOS NO MÊS',     accent: '#FF6500',            key: 'fechados_mes'   },
+] as const
 
 export function DashboardPage() {
   const { tenant } = useTenant()
@@ -30,17 +35,15 @@ export function DashboardPage() {
   const baselineY = chartPadT + chartH
 
   const maxVal = Math.max(...chartData.map(d => d.leads_criados), 1)
-  const minVal = 0
 
   const points = chartData.map((d, i) => {
     const divisor = chartData.length > 1 ? chartData.length - 1 : 1
     const x = chartData.length === 1
       ? paddingX + chartWidth / 2
       : paddingX + (i / divisor) * chartWidth
-    const val = d.leads_criados
     const y = chartData.length === 1
       ? chartPadT
-      : chartPadT + chartH - ((val - minVal) / (maxVal - minVal)) * chartH
+      : chartPadT + chartH - (d.leads_criados / maxVal) * chartH
     return { x, y, ...d }
   })
 
@@ -52,36 +55,7 @@ export function DashboardPage() {
     ? `${lineD} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`
     : ''
 
-  const cardBase = {
-    background: 'rgba(255, 255, 255, 0.04)',
-    backdropFilter: 'blur(20px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)',
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
-  }
-
-  const labelStyle = {
-    fontSize: '11px',
-    fontWeight: 600,
-    letterSpacing: '0.10em',
-    textTransform: 'uppercase' as const,
-    color: 'rgba(161, 181, 204, 0.8)',
-    marginBottom: '8px',
-  }
-
-  const numberStyle = {
-    fontSize: '56px',
-    fontWeight: 800,
-    lineHeight: 1,
-    fontFamily: 'Inter, sans-serif',
-    color: 'white',
-    marginBottom: '16px',
-    letterSpacing: '-2px',
-  }
+  const hasEnoughData = chartData.length > 1
 
   if (loading) {
     return (
@@ -95,7 +69,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-black text-white flex flex-col font-sans selection:bg-[#FF6500] selection:text-white">
+    <div className="relative min-h-screen text-white flex flex-col font-sans selection:bg-[#FF6500] selection:text-white">
       <AppNav />
 
       <main className="relative flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto space-y-8 overflow-y-auto">
@@ -109,85 +83,64 @@ export function DashboardPage() {
         </div>
 
         {/* 3 Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+        }}>
+          {CARDS.map(({ id, label, accent, key }) => (
+            <div key={id} style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderLeft: `3px solid ${accent}`,
+              borderRadius: '12px',
+              padding: '20px 24px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+            }}>
+              <p style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'rgba(161,181,204,0.7)',
+                marginBottom: '10px',
+              }}>{label}</p>
 
-          {/* Card 1: Leads Ativos */}
-          <div style={{ ...cardBase, borderLeft: '3px solid rgba(161,181,204,0.8)' }}>
-            <p style={labelStyle}>LEADS ATIVOS</p>
-            <p style={numberStyle}>{displayMetrics.total_leads}</p>
-            <svg width="100%" height="28" viewBox="0 0 180 28" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="g-leads" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(161,181,204,0.8)" stopOpacity="0.25"/>
-                  <stop offset="100%" stopColor="rgba(161,181,204,0.8)" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,22 C30,20 60,16 90,14 C120,12 150,8 180,4 L180,28 L0,28 Z"
-                fill="url(#g-leads)"
-              />
-              <path
-                d="M0,22 C30,20 60,16 90,14 C120,12 150,8 180,4"
-                fill="none"
-                stroke="rgba(161,181,204,0.8)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-            </svg>
-          </div>
+              <p style={{
+                fontSize: '48px',
+                fontWeight: 700,
+                lineHeight: 1,
+                fontFamily: 'Inter, sans-serif',
+                color: 'white',
+                letterSpacing: '-1px',
+                marginBottom: '14px',
+              }}>{displayMetrics[key]}</p>
 
-          {/* Card 2: Propostas Enviadas */}
-          <div style={{ ...cardBase, borderLeft: '3px solid rgba(255,101,0,0.7)' }}>
-            <p style={labelStyle}>PROPOSTAS ENVIADAS</p>
-            <p style={numberStyle}>{displayMetrics.total_propostas}</p>
-            <svg width="100%" height="28" viewBox="0 0 180 28" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="g-propostas" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(255,101,0,0.7)" stopOpacity="0.25"/>
-                  <stop offset="100%" stopColor="rgba(255,101,0,0.7)" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,22 C30,20 60,16 90,14 C120,12 150,8 180,4 L180,28 L0,28 Z"
-                fill="url(#g-propostas)"
-              />
-              <path
-                d="M0,22 C30,20 60,16 90,14 C120,12 150,8 180,4"
-                fill="none"
-                stroke="rgba(255,101,0,0.7)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-            </svg>
-          </div>
-
-          {/* Card 3: Fechados no Mês */}
-          <div style={{ ...cardBase, borderLeft: '3px solid #FF6500' }}>
-            <p style={labelStyle}>FECHADOS NO MÊS</p>
-            <p style={numberStyle}>{displayMetrics.fechados_mes}</p>
-            <svg width="100%" height="28" viewBox="0 0 180 28" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="g-fechados" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FF6500" stopOpacity="0.25"/>
-                  <stop offset="100%" stopColor="#FF6500" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,22 C30,20 60,16 90,14 C120,12 150,8 180,4 L180,28 L0,28 Z"
-                fill="url(#g-fechados)"
-              />
-              <path
-                d="M0,22 C30,20 60,16 90,14 C120,12 150,8 180,4"
-                fill="none"
-                stroke="#FF6500"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-            </svg>
-          </div>
+              <svg width="100%" height="24" viewBox="0 0 180 24" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id={`sg-${id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={accent} stopOpacity="0.20"/>
+                    <stop offset="100%" stopColor={accent} stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,20 C45,18 90,14 135,10 C158,8 170,6 180,4 L180,24 L0,24 Z"
+                  fill={`url(#sg-${id})`}
+                />
+                <path
+                  d="M0,20 C45,18 90,14 135,10 C158,8 170,6 180,4"
+                  fill="none"
+                  stroke={accent}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.5"
+                />
+              </svg>
+            </div>
+          ))}
         </div>
 
         {/* Evolução do Pipeline */}
@@ -197,11 +150,9 @@ export function DashboardPage() {
               <h2 className="text-lg font-bold text-white tracking-tight">Evolução do Pipeline</h2>
               <p className="text-xs text-[#A1B5CC] mt-0.5">Leads criados por semana de prospecção</p>
             </div>
-            <div className="flex items-center gap-4 text-xs font-mono">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#FF6500]" />
-                <span className="text-white">Leads Criados</span>
-              </div>
+            <div className="flex items-center gap-1.5 text-xs font-mono">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF6500]" />
+              <span className="text-white">Leads Criados</span>
             </div>
           </div>
 
@@ -210,27 +161,7 @@ export function DashboardPage() {
               <div className="ds-spinner" />
               <p className="text-[10px] font-mono text-[#A1B5CC]/60">Carregando dados do gráfico...</p>
             </div>
-          ) : chartData.length <= 1 ? (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '200px',
-              gap: '8px',
-            }}>
-              <p style={{ color: 'rgba(161,181,204,0.5)', fontSize: '13px' }}>
-                Adicione mais leads para ver a evolução semanal
-              </p>
-              <Link to="/pipeline" style={{
-                color: '#FF6500',
-                fontSize: '13px',
-                fontWeight: 500,
-              }}>
-                Ir para o Pipeline →
-              </Link>
-            </div>
-          ) : (
+          ) : hasEnoughData ? (
             <div className="relative w-full overflow-x-auto min-h-[220px]">
               <svg
                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -249,16 +180,9 @@ export function DashboardPage() {
                   </linearGradient>
                 </defs>
                 {areaD && <path d={areaD} fill="url(#areaGrad)" />}
-
                 {lineD && (
-                  <path
-                    d={lineD}
-                    fill="none"
-                    stroke="#FF6500"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <path d={lineD} fill="none" stroke="#FF6500" strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round" />
                 )}
 
                 {points.map((p, i) => {
@@ -266,39 +190,24 @@ export function DashboardPage() {
                   return (
                     <g key={i}>
                       {isHovered && (
-                        <line
-                          x1={p.x} y1={chartPadT}
-                          x2={p.x} y2={baselineY}
-                          stroke="#FF6500"
-                          strokeWidth="1"
-                          strokeDasharray="2 2"
-                        />
+                        <line x1={p.x} y1={chartPadT} x2={p.x} y2={baselineY}
+                          stroke="#FF6500" strokeWidth="1" strokeDasharray="2 2" />
                       )}
-                      <text
-                        x={p.x} y={svgHeight - 10}
-                        fill="#A1B5CC"
-                        fontSize="9"
-                        fontFamily="JetBrains Mono, monospace"
-                        textAnchor="middle"
-                        opacity={isHovered ? 1 : 0.6}
-                      >
+                      <text x={p.x} y={svgHeight - 10} fill="#A1B5CC" fontSize="9"
+                        fontFamily="JetBrains Mono, monospace" textAnchor="middle"
+                        opacity={isHovered ? 1 : 0.6}>
                         {p.semana}
                       </text>
-                      <circle
-                        cx={p.x} cy={p.y}
-                        r={isHovered ? 6 : 4}
+                      <circle cx={p.x} cy={p.y} r={isHovered ? 6 : 4}
                         fill={isHovered ? '#FF6500' : '#0B192C'}
-                        stroke="#FF6500"
-                        strokeWidth={isHovered ? 2.5 : 1.5}
-                        className="transition-all duration-150"
-                      />
+                        stroke="#FF6500" strokeWidth={isHovered ? 2.5 : 1.5}
+                        className="transition-all duration-150" />
                     </g>
                   )
                 })}
 
                 {points.map((p, i) => (
-                  <rect
-                    key={i}
+                  <rect key={i}
                     x={p.x - chartWidth / (chartData.length - 1 || 1) / 2}
                     y={chartPadT}
                     width={chartWidth / (chartData.length - 1 || 1)}
@@ -334,6 +243,27 @@ export function DashboardPage() {
                   </span>
                 </div>
               )}
+            </div>
+          ) : (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '160px',
+              gap: '6px',
+            }}>
+              <p style={{ color: 'rgba(161,181,204,0.40)', fontSize: '13px', textAlign: 'center' }}>
+                Crie mais leads para ver a evolução semanal
+              </p>
+              <a href="/pipeline" style={{
+                color: '#FF6500',
+                fontSize: '13px',
+                fontWeight: 500,
+                textDecoration: 'none',
+              }}>
+                Ir para o Pipeline →
+              </a>
             </div>
           )}
         </div>
