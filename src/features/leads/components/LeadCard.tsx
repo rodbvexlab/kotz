@@ -113,19 +113,20 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
   const statusColor = STATUS_COLOR[lead.status] || '#1E3E62'
 
   const style: React.CSSProperties = {
-    background: isHovered ? 'rgba(15, 32, 54, 0.50)' : 'rgba(11, 25, 44, 0.40)',
-    backdropFilter: 'blur(20px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-    border: isHovered ? '1px solid rgba(255, 101, 0, 0.35)' : '1px solid rgba(30, 62, 98, 0.20)',
+    background: 'rgba(255, 255, 255, 0.04)',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    border: isHovered ? '1px solid rgba(255, 101, 0, 0.30)' : '1px solid rgba(255, 255, 255, 0.09)',
     borderLeft: `3px solid ${statusColor}`,
     borderRadius: '12px',
     boxShadow: isHovered 
-      ? '0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 12px rgba(255, 101, 0, 0.10)'
-      : '0 4px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+      ? '0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 101, 0, 0.10)'
+      : '0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
     padding: '14px',
     cursor: isDragging ? 'grabbing' : 'grab',
-    transform: CSS.Transform.toString(transform),
-    transition,
+    opacity: isDragging ? 0.5 : 1,
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition: 'border-color 150ms, box-shadow 150ms',
   }
 
   return (

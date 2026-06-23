@@ -20,20 +20,26 @@ export function KanbanColumn({ column, leads, isOver, onOpenLead, onAddLead }: K
 
   const isDrop = column.isDrop
 
+  const style: React.CSSProperties = {
+    background: isOver && !isDrop ? 'rgba(255, 101, 0, 0.04)' : 'rgba(255, 255, 255, 0.02)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: isOver && !isDrop 
+      ? '1px solid rgba(255, 101, 0, 0.40)' 
+      : isOver && isDrop 
+        ? '1px solid rgba(30, 62, 98, 0.50)'
+        : '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: '16px',
+    transition: 'border-color 200ms, background 200ms',
+  }
+
   return (
     <div
+      style={style}
       className={[
-        'flex flex-col rounded-2xl border transition-all duration-200 w-64 shrink-0',
-        isDrop
-          ? 'bg-[#060f1a]/40 border-[#1E3E62]/15 opacity-60'
-          : 'bg-[#0B192C]/40 backdrop-blur-md border-[#1E3E62]/25',
-        isOver && !isDrop
-          ? 'border-[#FF6500]/50 shadow-[0_0_0_1px_#FF650030] bg-[#0D1F33]/40'
-          : '',
-        isOver && isDrop
-          ? 'border-[#1E3E62]/50 opacity-80 bg-[#060f1a]/60'
-          : '',
-      ].join(' ')}
+        'flex flex-col w-64 shrink-0 transition-all duration-200',
+        isDrop ? 'opacity-50' : '',
+      ].filter(Boolean).join(' ')}
     >
       {/* Column Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3">

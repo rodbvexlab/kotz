@@ -31,22 +31,39 @@ export function GlassCard({
   let customStyle: React.CSSProperties = {}
 
   if (variant === 'metric') {
-    variantStyles = 'backdrop-blur-[16px] backdrop-saturate-[180%] bg-[#0B192C]/60 rounded-2xl glass-metric overflow-hidden'
+    variantStyles = 'overflow-hidden'
     customStyle = {
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      borderTop: `1px solid ${hexToRgbaStr(accentColor, 0.3)}`,
-      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+      background: 'rgba(255, 255, 255, 0.04)',
+      backdropFilter: 'blur(24px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+      border: '1px solid rgba(255, 255, 255, 0.10)',
+      borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+      boxShadow: `
+        0 8px 32px rgba(0, 0, 0, 0.6),
+        0 2px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.20)
+      `,
+      borderRadius: '16px',
     }
   } else if (variant === 'overlay') {
-    variantStyles = 'backdrop-blur-[24px] backdrop-saturate-[200%] bg-[#0B192C]/75 rounded-none'
+    variantStyles = 'rounded-none'
     customStyle = {
-      borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+      background: 'rgba(0, 0, 0, 0.60)',
+      backdropFilter: 'blur(24px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
     }
   } else {
     // default
-    variantStyles = 'backdrop-blur-[12px] bg-[#0B192C]/50 rounded-xl'
+    variantStyles = ''
     customStyle = {
-      border: '1px solid rgba(30, 62, 98, 0.3)'
+      background: 'rgba(255, 255, 255, 0.03)',
+      backdropFilter: 'blur(20px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+      borderRadius: '12px',
     }
   }
 
