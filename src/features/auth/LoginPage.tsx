@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { GlassCard } from '@/components/ui/GlassCard'
 import { Eye, EyeOff } from 'lucide-react'
 import AttractButton from '@/components/ui/AttractButton'
 import Orb from '@/components/ui/Orb'
@@ -42,8 +41,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex font-sans selection:bg-[#FF6500] selection:text-white overflow-hidden relative">
-      {/* CSS Animado para Typewriter */}
+    <div className="min-h-screen text-white flex font-sans selection:bg-[#FF6500] selection:text-white overflow-hidden relative">
+
       <style>{`
         @keyframes typing {
           from { width: 0 }
@@ -64,7 +63,7 @@ export function LoginPage() {
           border-right: 3px solid #FF6500;
           white-space: nowrap;
           letter-spacing: 0.03em;
-          animation: 
+          animation:
             typing 3s steps(22, end) infinite alternate,
             blink-caret 0.75s step-end infinite;
         }
@@ -74,32 +73,61 @@ export function LoginPage() {
         }
       `}</style>
 
-      {/* LADO ESQUERDO: Form card */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-[#000000] z-10 relative">
-        {/* Background glow sutil no lado esquerdo */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0B192C]/20 via-black to-black pointer-events-none" />
-
+      {/* ─── LEFT: Login Form ──────────────────────────────────────────── */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 z-10 relative">
         <div className="w-full max-w-md">
-          {/* Logo e cabeçalho fora do card para visual limpo */}
+
+          {/* Logo */}
           <div className="text-center mb-8">
-            <span className="text-4xl font-bold tracking-tight">
+            <span className="text-4xl font-extrabold tracking-tight">
               <span className="text-white">Ko</span>
-              <span className="text-[#FF6500]">tz</span>
+              <span
+                className="text-[#FF6500]"
+                style={{ filter: 'drop-shadow(0 0 8px rgba(255,101,0,0.35))' }}
+              >
+                tz
+              </span>
             </span>
-            <p className="text-[#1E3E62] text-xs mt-1.5 tracking-widest uppercase font-mono">CRM</p>
+            <p className="text-[#A1B5CC] text-xs mt-1.5 tracking-widest uppercase font-mono">CRM</p>
           </div>
 
-          <GlassCard variant="default" className="p-8 space-y-6">
+          {/* Glass Card */}
+          <div
+            className="p-8 space-y-6 rounded-2xl"
+            style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              backdropFilter: 'blur(24px) saturate(170%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(170%)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}
+          >
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">Entrar na sua conta</h1>
-              <p className="text-xs text-[#A1B5CC]/70 mt-1">Insira seus dados de acesso abaixo.</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(161,181,204,0.7)' }}>
+                Insira seus dados de acesso abaixo.
+              </p>
             </div>
 
-            {/* Google OAuth */}
+            {/* Google OAuth — glass style */}
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-lg py-2.5 text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 font-semibold rounded-xl py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+                color: '#fff',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.10)'
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.10)'
+              }}
             >
               <GoogleIcon />
               Continuar com Google
@@ -107,26 +135,39 @@ export function LoginPage() {
 
             {/* Divider */}
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#1E3E62]/30" />
-              <span className="text-[#A1B5CC]/50 text-xs font-medium">ou use e-mail</span>
-              <div className="flex-1 h-px bg-[#1E3E62]/30" />
+              <div className="flex-1 h-px" style={{ background: 'rgba(30,62,98,0.30)' }} />
+              <span className="text-xs font-medium" style={{ color: 'rgba(161,181,204,0.5)' }}>
+                ou use e-mail
+              </span>
+              <div className="flex-1 h-px" style={{ background: 'rgba(30,62,98,0.30)' }} />
             </div>
 
-            {/* Email + Senha */}
+            {/* Email + Password inputs */}
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">E-mail</label>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#A1B5CC' }}>
+                  E-mail
+                </label>
                 <input
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-[#112236] border border-[#1E3E62]/50 focus:border-[#FF6500] focus:ring-1 focus:ring-[#FF6500]/25 rounded-lg px-4 py-2.5 text-white placeholder-[#1E3E62] text-sm focus:outline-none transition-all duration-200"
+                  className="w-full rounded-xl px-4 py-2.5 text-white text-sm outline-none transition-all duration-200 focus:border-[#FF6500]/60 focus:ring-1 focus:ring-[#FF6500]/25"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    backdropFilter: 'blur(24px)',
+                    WebkitBackdropFilter: 'blur(24px)',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    color: '#fff',
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">Senha</label>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#A1B5CC' }}>
+                  Senha
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -134,12 +175,22 @@ export function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleEmailLogin()}
-                    className="w-full bg-[#112236] border border-[#1E3E62]/50 focus:border-[#FF6500] focus:ring-1 focus:ring-[#FF6500]/25 rounded-lg pl-4 pr-10 py-2.5 text-white placeholder-[#1E3E62] text-sm focus:outline-none transition-all duration-200"
+                    className="w-full rounded-xl pl-4 pr-10 py-2.5 text-white text-sm outline-none transition-all duration-200 focus:border-[#FF6500]/60 focus:ring-1 focus:ring-[#FF6500]/25"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      backdropFilter: 'blur(24px)',
+                      WebkitBackdropFilter: 'blur(24px)',
+                      border: '1px solid rgba(255, 255, 255, 0.09)',
+                      color: '#fff',
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1B5CC] hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-pointer"
+                    style={{ color: '#A1B5CC' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#A1B5CC')}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -148,7 +199,14 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <p className="text-xs text-[#FF6500]/90 bg-[#FF6500]/10 border border-[#FF6500]/20 rounded-lg px-3 py-2.5 font-mono">
+              <p
+                className="text-xs rounded-lg px-3 py-2.5 font-mono"
+                style={{
+                  color: 'rgba(255,101,0,0.9)',
+                  background: 'rgba(255,101,0,0.08)',
+                  border: '1px solid rgba(255,101,0,0.15)',
+                }}
+              >
                 {error}
               </p>
             )}
@@ -164,60 +222,61 @@ export function LoginPage() {
               <button
                 onClick={handleEmailSignUp}
                 disabled={loading || !email || !password}
-                className="flex-1 bg-[#112236] hover:bg-[#162d47] border border-[#1E3E62]/50 text-white font-semibold rounded-lg py-2.5 text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed"
+                className="flex-1 font-semibold rounded-lg py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: '#fff',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                  e.currentTarget.style.borderColor = 'rgba(255,101,0,0.25)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
+                }}
               >
                 Criar conta
               </button>
             </div>
-          </GlassCard>
+          </div>
         </div>
       </div>
 
-      {/* LADO DIREITO — Orb WebGL animado */}
-      <div className="hidden md:flex flex-1 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #0B192C 0%, #000000 100%)',
-          borderLeft: '1px solid rgba(30,62,98,0.20)'
-        }}
+      {/* ─── RIGHT: Orb WebGL ──────────────────────────────────────────── */}
+      <div
+        className="hidden md:flex flex-1 relative overflow-hidden"
+        style={{ borderLeft: '1px solid rgba(30,62,98,0.15)' }}
       >
-        {/* Orb WebGL animado */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
+        {/* Orb */}
+        <div className="absolute inset-0 flex items-center justify-center">
           <div style={{ width: '500px', height: '500px' }}>
             <Orb
               hue={20}
               hoverIntensity={0.4}
               rotateOnHover={true}
-              backgroundColor="#000000"
+              backgroundColor="transparent"
             />
           </div>
         </div>
 
-        {/* Texto sobre o Orb */}
-        <div style={{
-          position: 'absolute',
-          bottom: '48px',
-          left: 0, right: 0,
-          textAlign: 'center',
-          zIndex: 10,
-        }}>
-          {/* typewriter CSS atual — manter */}
+        {/* Typewriter text */}
+        <div className="absolute bottom-12 left-0 right-0 text-center z-10">
           <div className="min-h-[40px] flex items-center justify-center">
             <h2 className="text-2xl font-bold tracking-tight text-white font-sans">
-              <span className="typewriter-text font-bold"></span>
+              <span className="typewriter-text font-bold" />
             </h2>
           </div>
-          <p style={{
-            fontFamily: 'JetBrains Mono, monospace',
-            color: '#1E3E62',
-            fontSize: '13px',
-            marginTop: '12px'
-          }}>
+          <p
+            className="mt-3"
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              color: '#A1B5CC',
+              fontSize: '13px',
+              opacity: 0.5,
+            }}
+          >
             — Kotz CRM
           </p>
         </div>
@@ -236,4 +295,3 @@ function GoogleIcon() {
     </svg>
   )
 }
-
