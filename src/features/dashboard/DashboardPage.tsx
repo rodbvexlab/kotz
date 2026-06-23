@@ -27,6 +27,14 @@ export function DashboardPage() {
 
   const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
 
+  // Sempre mostra os cards — zeros quando não há dados ainda
+  const displayMetrics = metrics ?? {
+    total_leads: 0,
+    total_propostas: 0,
+    fechados_mes: 0,
+    taxa_conversao: 0,
+  }
+
   const maxRate = Math.max(...MOCK_GRAPH_DATA.map(d => d.rate), 30)
 
   // Configurações do SVG
@@ -81,10 +89,9 @@ export function DashboardPage() {
           </p>
         </div>
 
-        {metrics ? (
-          <>
-            {/* 3 Metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <>
+          {/* 3 Metric Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1: Leads Ativos */}
               <GlassCard variant="metric" accentColor="#1E3E62" className="p-6 group relative">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1E3E62] group-hover:bg-[#FF6500] transition-colors" />
@@ -92,7 +99,7 @@ export function DashboardPage() {
                   <div>
                     <p className="text-xs font-semibold tracking-wider text-[#A1B5CC] uppercase">Leads Ativos</p>
                     <p className="text-4xl font-bold font-mono text-white mt-3 tracking-tight">
-                      {metrics.total_leads}
+                      {displayMetrics.total_leads}
                     </p>
                   </div>
                   <div className="p-3 bg-[#1E3E62]/20 rounded-lg text-[#A1B5CC] group-hover:text-white transition-colors">
@@ -112,7 +119,7 @@ export function DashboardPage() {
                   <div>
                     <p className="text-xs font-semibold tracking-wider text-[#A1B5CC] uppercase">Propostas Enviadas</p>
                     <p className="text-4xl font-bold font-mono text-white mt-3 tracking-tight">
-                      {metrics.total_propostas}
+                      {displayMetrics.total_propostas}
                     </p>
                   </div>
                   <div className="p-3 bg-[#1E3E62]/20 rounded-lg text-[#A1B5CC] group-hover:text-white transition-colors">
@@ -131,7 +138,7 @@ export function DashboardPage() {
                   <div>
                     <p className="text-xs font-semibold tracking-wider text-[#A1B5CC] uppercase">Fechados no Mês</p>
                     <p className="text-4xl font-bold font-mono text-white mt-3 tracking-tight">
-                      {metrics.fechados_mes}
+                      {displayMetrics.fechados_mes}
                     </p>
                   </div>
                   <div className="p-3 bg-[#FF6500]/10 rounded-lg text-[#FF6500]">
@@ -139,7 +146,7 @@ export function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 mt-4 text-[10px] font-mono text-[#A1B5CC]/60">
-                  <span className="text-emerald-400 font-semibold">{metrics.taxa_conversao.toFixed(1)}% de conversão</span>
+                  <span className="text-emerald-400 font-semibold">{displayMetrics.taxa_conversao.toFixed(1)}% de conversão</span>
                   <span>geral no mês</span>
                 </div>
               </GlassCard>
@@ -280,12 +287,7 @@ export function DashboardPage() {
                 )}
               </div>
             </div>
-          </>
-        ) : (
-          <div className="rounded-xl border border-[#1E3E62]/15 bg-[#0B192C]/50 p-12 text-center">
-            <p className="text-sm text-[#A1B5CC]">Nenhum dado de métrica disponível no momento.</p>
-          </div>
-        )}
+        </>
       </main>
     </div>
   )
