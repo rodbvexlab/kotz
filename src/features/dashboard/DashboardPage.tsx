@@ -1,38 +1,14 @@
 import { useState } from 'react'
+import { motion } from 'motion/react'
+import { Users, Send, Trophy, TrendingUp } from 'lucide-react'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { useChartData } from './hooks/useChartData'
 import { AppNav } from '@/components/layout/AppNav'
+import { BentoGrid, BentoItem } from '@/components/ui/BentoGrid'
+import { UsageAnalyticsCard } from '@/components/ui/UsageAnalyticsCard'
+import { DotMatrixChart } from '@/components/ui/DotMatrixChart'
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard'
-
-// ─── Design System §5 — MetricCard accent per card ────────────────────────────
-const CARDS = [
-  {
-    id:         'leads',
-    label:      'LEADS ATIVOS',
-    accent:     '#4A7FA5',
-    sparkColor: 'rgba(74,127,165,0.7)',
-    key:        'total_leads',
-  },
-  {
-    id:         'propostas',
-    label:      'PROPOSTAS ENVIADAS',
-    accent:     'rgba(255,101,0,0.75)',
-    sparkColor: 'rgba(255,101,0,0.65)',
-    key:        'total_propostas',
-  },
-  {
-    id:         'fechados',
-    label:      'FECHADOS NO MÊS',
-    accent:     '#FF6500',
-    sparkColor: '#FF6500',
-    key:        'fechados_mes',
-  },
-] as const
-
-// § 5 Sparkline — cubic bezier, no straight lines
-const SPARKLINE_PATH = 'M0,20 C30,19 60,16 90,13 C120,10 150,7 180,4'
-const SPARKLINE_AREA = 'M0,20 C30,19 60,16 90,13 C120,10 150,7 180,4 L180,24 L0,24 Z'
 
 export function DashboardPage() {
   const { tenant } = useTenant()
@@ -42,21 +18,22 @@ export function DashboardPage() {
 
   const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
 
-  const displayMetrics = metrics ?? {
-    total_leads:     0,
+  const m = metrics ?? {
+    total_leads: 0,
     total_propostas: 0,
-    fechados_mes:    0,
-    taxa_conversao:  0,
+    fechados_mes: 0,
+    taxa_conversao: 0,
+    funnel: [],
   }
 
   // ─── SVG chart config ────────────────────────────────────────────────────────
-  const svgWidth   = 600
-  const svgHeight  = 250
-  const paddingX   = 40
+  const svgWidth = 600
+  const svgHeight = 250
+  const paddingX = 40
   const chartWidth = svgWidth - paddingX * 2
-  const chartH     = 200
-  const chartPadT  = 20
-  const baselineY  = chartPadT + chartH
+  const chartH = 200
+  const chartPadT = 20
+  const baselineY = chartPadT + chartH
 
   const maxVal = Math.max(...chartData.map(d => d.leads_criados), 1)
 
@@ -71,7 +48,6 @@ export function DashboardPage() {
     return { x, y, ...d }
   })
 
-  // § 5 Gráfico Pipeline — cubic bezier smooth path
   const buildSmoothPath = (pts: typeof points): string => {
     if (pts.length < 2) return ''
     let d = `M ${pts[0].x} ${pts[0].y}`
@@ -93,362 +69,288 @@ export function DashboardPage() {
   const hasEnoughData = chartData.length > 1
 
   return (
-    <div style={{
-      position:      'relative',
-      minHeight:     '100vh',
-      color:         'white',
-      display:       'flex',
-      flexDirection: 'column',
-      fontFamily:    'Inter, system-ui, sans-serif',
-    }}>
+    <div className="relative min-h-screen text-white flex flex-col font-[Inter,system-ui,sans-serif]">
       <AppNav />
 
-      <main style={{
-        flex:          1,
-        padding:       '24px',
-        maxWidth:      '1200px',
-        width:         '100%',
-        margin:        '0 auto',
-        display:       'flex',
-        flexDirection: 'column',
-        gap:           '24px',
-      }}>
+      <main className="flex-1 p-6 max-w-[1200px] w-full mx-auto flex flex-col gap-6">
 
-        {/* ─── Page heading ─────────────────────────────────────────────────── */}
-        <div>
-          <h1 style={{
-            fontSize:      '28px',
-            fontWeight:    700,
-            letterSpacing: '-1px',
-            color:         'white',
-            margin:        0,
-          }}>
+        {/* ─── Page heading with stagger animation ───────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+          <h1 className="text-[28px] font-bold tracking-[-1px] text-white m-0">
             {tenantName ? `Olá, ${tenantName}` : 'Dashboard'}
           </h1>
-          <p style={{ fontSize: '14px', color: '#A1B5CC', marginTop: '4px' }}>
+          <p className="text-sm mt-1" style={{ color: '#A1B5CC' }}>
             Visão geral do seu funil de prospecção
           </p>
-        </div>
+        </motion.div>
 
-        {/* ─── § 5 MetricCards — glass-metric, 3 colunas ─────────────────── */}
-        <div style={{
-          display:             'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap:                 '16px',
-        }}>
-          {CARDS.map(({ id, label, accent, sparkColor, key }) => (
-            <LiquidGlassCard
-              key={id}
-              style={{
-                padding:    '22px 24px',
-                transition: 'opacity 400ms ease',
-                opacity:    loading ? 0.5 : 1,
-              }}
-            >
-              {/* Label: UPPERCASE 11px #A1B5CC letter-spacing 0.12em weight-600 */}
-              <p style={{
-                fontSize:      '11px',
-                fontWeight:    600,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color:         '#A1B5CC',
-                margin:        '0 0 10px 0',
-              }}>
-                {label}
-              </p>
+        {/* ─── Bento Grid: Metric Cards ──────────────────────────────────── */}
+        <BentoGrid className="md:grid-cols-4">
+          <BentoItem>
+            <UsageAnalyticsCard
+              label="LEADS ATIVOS"
+              value={m.total_leads}
+              loading={loading}
+              accentColor="#4A7FA5"
+              icon={<Users className="w-4 h-4" style={{ color: '#4A7FA5' }} />}
+            />
+          </BentoItem>
+          <BentoItem>
+            <UsageAnalyticsCard
+              label="PROPOSTAS ENVIADAS"
+              value={m.total_propostas}
+              loading={loading}
+              accentColor="rgba(255,101,0,0.85)"
+              icon={<Send className="w-4 h-4" style={{ color: '#FF6500' }} />}
+            />
+          </BentoItem>
+          <BentoItem>
+            <UsageAnalyticsCard
+              label="FECHADOS NO MÊS"
+              value={m.fechados_mes}
+              loading={loading}
+              accentColor="#FF6500"
+              icon={<Trophy className="w-4 h-4" style={{ color: '#FF6500' }} />}
+            />
+          </BentoItem>
+          <BentoItem>
+            <UsageAnalyticsCard
+              label="TAXA DE CONVERSÃO"
+              value={m.taxa_conversao}
+              loading={loading}
+              accentColor="#22C55E"
+              icon={<TrendingUp className="w-4 h-4" style={{ color: '#22C55E' }} />}
+            />
+          </BentoItem>
+        </BentoGrid>
 
-              {/* Número: 60px weight-900 Inter white letter-spacing:-2px */}
-              {loading ? (
-                <div
-                  className="skeleton-shimmer"
-                  style={{
-                    height:       '60px',
-                    width:        '120px',
-                    borderRadius: '8px',
-                    marginBottom: '14px',
-                  }}
-                />
-              ) : (
-                <p style={{
-                  fontSize:      '60px',
-                  fontWeight:    900,
-                  lineHeight:    1,
-                  fontFamily:    'Inter, sans-serif',
-                  color:         'white',
-                  letterSpacing: '-2px',
-                  margin:        '0 0 14px 0',
-                }}>
-                  {displayMetrics[key]}
-                </p>
-              )}
+        {/* ─── Bento Grid: Charts Row ────────────────────────────────────── */}
+        <BentoGrid className="md:grid-cols-3">
 
-              {/* § 5 Sparkline — cubic bezier, area 0.22, line 0.55, sem eixos */}
-              <svg width="100%" height="24" viewBox="0 0 180 24" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id={`sg-${id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor={sparkColor} stopOpacity="0.22" />
-                    <stop offset="100%" stopColor={sparkColor} stopOpacity="0"    />
-                  </linearGradient>
-                </defs>
-                <path d={SPARKLINE_AREA} fill={`url(#sg-${id})`} />
-                <path
-                  d={SPARKLINE_PATH}
-                  fill="none"
-                  stroke={sparkColor}
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  opacity="0.55"
-                />
-              </svg>
-            </LiquidGlassCard>
-          ))}
-        </div>
-
-        {/* ─── § 5 Gráfico Pipeline — glass-metric, padding 24px ─────────── */}
-        <LiquidGlassCard
-          style={{
-            padding:  '24px',
-            position: 'relative',
-          }}
-        >
-          {/* Header do gráfico */}
-          <div style={{
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'space-between',
-            marginBottom:   '20px',
-          }}>
-            <div>
-              {/* Título: 16px weight-600 white */}
-              <h2 style={{
-                fontSize:      '16px',
-                fontWeight:    600,
-                color:         'white',
-                margin:        0,
-                letterSpacing: '-0.3px',
-              }}>
-                Evolução do Pipeline
-              </h2>
-              {/* Subtítulo: 12px #A1B5CC */}
-              <p style={{ fontSize: '12px', color: '#A1B5CC', margin: '4px 0 0 0' }}>
-                Leads criados por semana de prospecção
-              </p>
-            </div>
-
-            {/* Legenda */}
-            <div style={{
-              display:    'flex',
-              alignItems: 'center',
-              gap:        '6px',
-              fontSize:   '11px',
-              fontFamily: 'JetBrains Mono, monospace',
-              color:      '#A1B5CC',
-            }}>
-              <span style={{
-                width:        '8px',
-                height:       '8px',
-                borderRadius: '50%',
-                background:   'linear-gradient(135deg, #FF6500, #e85500)',
-                display:      'inline-block',
-                boxShadow:    '0 0 6px rgba(255,101,0,0.40)',
-              }} />
-              <span style={{ color: 'white' }}>Leads Criados</span>
-            </div>
-          </div>
-
-          {/* ── Chart body ── */}
-          {chartLoading ? (
-            <div style={{
-              display:        'flex',
-              flexDirection:  'column',
-              alignItems:     'center',
-              justifyContent: 'center',
-              minHeight:      '220px',
-              gap:            '12px',
-            }}>
-              <div className="ds-spinner" />
-              <p style={{
-                fontSize:   '10px',
-                fontFamily: 'JetBrains Mono, monospace',
-                color:      'rgba(161,181,204,0.6)',
-              }}>
-                Carregando dados do gráfico...
-              </p>
-            </div>
-          ) : hasEnoughData ? (
-            // § 5 — exibir SOMENTE quando chartData.length > 1
-            <div style={{ position: 'relative', width: '100%', overflowX: 'auto', minHeight: '220px' }}>
-              <svg
-                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                style={{ width: '100%', minWidth: '500px', height: 'auto', display: 'block', userSelect: 'none' }}
-              >
-                {/* Grid: 3 linhas horizontais rgba(30,62,98,0.20) */}
-                <g stroke="rgba(30,62,98,0.20)" strokeWidth="1">
-                  <line x1={paddingX} y1={chartPadT}                  x2={svgWidth - paddingX} y2={chartPadT}                  />
-                  <line x1={paddingX} y1={chartPadT + chartH / 2}     x2={svgWidth - paddingX} y2={chartPadT + chartH / 2}     />
-                  <line x1={paddingX} y1={baselineY}                   x2={svgWidth - paddingX} y2={baselineY}                   />
-                </g>
-
-                <defs>
-                  {/* Área: gradiente #FF6500 → transparente opacity 0.15 */}
-                  <linearGradient id="pipelineAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#FF6500" stopOpacity="0.15" />
-                    <stop offset="100%" stopColor="#FF6500" stopOpacity="0.00" />
-                  </linearGradient>
-                </defs>
-
-                {areaD && <path d={areaD} fill="url(#pipelineAreaGrad)" />}
-                {/* Linha: #FF6500 strokeWidth 2 rounded */}
-                {lineD && (
-                  <path
-                    d={lineD}
-                    fill="none"
-                    stroke="#FF6500"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+          {/* Pipeline Chart — spans 2 cols */}
+          <BentoItem colSpan={2}>
+            <LiquidGlassCard style={{ padding: '24px', position: 'relative', height: '100%' }}>
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-[16px] font-semibold text-white tracking-[-0.3px] m-0">
+                    Evolução do Pipeline
+                  </h2>
+                  <p className="text-xs mt-1 m-0" style={{ color: '#A1B5CC' }}>
+                    Leads criados por semana
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] font-mono" style={{ color: '#A1B5CC' }}>
+                  <span
+                    className="w-2 h-2 rounded-full inline-block"
+                    style={{
+                      background: 'linear-gradient(135deg, #FF6500, #e85500)',
+                      boxShadow: '0 0 6px rgba(255,101,0,0.40)',
+                    }}
                   />
-                )}
+                  <span className="text-white">Leads</span>
+                </div>
+              </div>
 
-                {points.map((p, i) => {
-                  const isHovered = hoveredIndex === i
-                  return (
-                    <g key={i}>
-                      {/* Dashed crosshair on hover */}
-                      {isHovered && (
-                        <line
-                          x1={p.x} y1={chartPadT} x2={p.x} y2={baselineY}
-                          stroke="rgba(255,101,0,0.30)"
-                          strokeWidth="1"
-                          strokeDasharray="3 3"
-                        />
-                      )}
-                      {/* Labels eixo X: 11px JetBrains Mono #A1B5CC opacity 0.6 */}
-                      <text
-                        x={p.x} y={svgHeight - 8}
-                        fill="#A1B5CC"
-                        fontSize="11"
-                        fontFamily="JetBrains Mono, monospace"
-                        textAnchor="middle"
-                        opacity={isHovered ? 1 : 0.6}
-                      >
-                        {p.semana}
-                      </text>
-                      {/* Data point dot — hover: filled + glow */}
-                      <circle
-                        cx={p.x} cy={p.y}
-                        r={isHovered ? 5 : 3}
-                        fill={isHovered ? '#FF6500' : 'rgba(8,12,20,0.9)'}
-                        stroke="#FF6500"
-                        strokeWidth={isHovered ? 2 : 1.5}
-                        style={{ transition: 'all 150ms ease', filter: isHovered ? 'drop-shadow(0 0 4px rgba(255,101,0,0.6))' : 'none' }}
-                      />
+              {chartLoading ? (
+                <div className="flex flex-col items-center justify-center min-h-[220px] gap-3">
+                  <div className="ds-spinner" />
+                  <p className="text-[10px] font-mono" style={{ color: 'rgba(161,181,204,0.6)' }}>
+                    Carregando dados...
+                  </p>
+                </div>
+              ) : hasEnoughData ? (
+                <div className="relative w-full overflow-x-auto min-h-[220px]">
+                  <svg
+                    viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                    className="w-full min-w-[500px] h-auto block select-none"
+                  >
+                    <g stroke="rgba(30,62,98,0.20)" strokeWidth="1">
+                      <line x1={paddingX} y1={chartPadT} x2={svgWidth - paddingX} y2={chartPadT} />
+                      <line x1={paddingX} y1={chartPadT + chartH / 2} x2={svgWidth - paddingX} y2={chartPadT + chartH / 2} />
+                      <line x1={paddingX} y1={baselineY} x2={svgWidth - paddingX} y2={baselineY} />
                     </g>
-                  )
-                })}
 
-                {/* Invisible hover hit areas */}
-                {points.map((p, i) => (
-                  <rect
-                    key={i}
-                    x={p.x - chartWidth / (chartData.length - 1 || 1) / 2}
-                    y={chartPadT}
-                    width={chartWidth / (chartData.length - 1 || 1)}
-                    height={chartH}
-                    fill="transparent"
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={() => setHoveredIndex(i)}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                  />
-                ))}
-              </svg>
+                    <defs>
+                      <linearGradient id="pipelineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF6500" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="#FF6500" stopOpacity="0.00" />
+                      </linearGradient>
+                    </defs>
 
-              {/* § 5 Tooltip: glass-card mini — NOT rgba(11,25,44,X) */}
-              {hoveredIndex !== null && points[hoveredIndex] && (
+                    {areaD && <path d={areaD} fill="url(#pipelineAreaGrad)" />}
+                    {lineD && (
+                      <path
+                        d={lineD}
+                        fill="none"
+                        stroke="#FF6500"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    )}
+
+                    {points.map((p, i) => {
+                      const isHovered = hoveredIndex === i
+                      return (
+                        <g key={i}>
+                          {isHovered && (
+                            <line
+                              x1={p.x} y1={chartPadT} x2={p.x} y2={baselineY}
+                              stroke="rgba(255,101,0,0.30)"
+                              strokeWidth="1"
+                              strokeDasharray="3 3"
+                            />
+                          )}
+                          <text
+                            x={p.x} y={svgHeight - 8}
+                            fill="#A1B5CC"
+                            fontSize="11"
+                            fontFamily="JetBrains Mono, monospace"
+                            textAnchor="middle"
+                            opacity={isHovered ? 1 : 0.6}
+                          >
+                            {p.semana}
+                          </text>
+                          <circle
+                            cx={p.x} cy={p.y}
+                            r={isHovered ? 5 : 3}
+                            fill={isHovered ? '#FF6500' : 'rgba(8,12,20,0.9)'}
+                            stroke="#FF6500"
+                            strokeWidth={isHovered ? 2 : 1.5}
+                            style={{
+                              transition: 'all 150ms ease',
+                              filter: isHovered ? 'drop-shadow(0 0 4px rgba(255,101,0,0.6))' : 'none',
+                            }}
+                          />
+                        </g>
+                      )
+                    })}
+
+                    {points.map((p, i) => (
+                      <rect
+                        key={i}
+                        x={p.x - chartWidth / (chartData.length - 1 || 1) / 2}
+                        y={chartPadT}
+                        width={chartWidth / (chartData.length - 1 || 1)}
+                        height={chartH}
+                        fill="transparent"
+                        className="cursor-pointer"
+                        onMouseEnter={() => setHoveredIndex(i)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                      />
+                    ))}
+                  </svg>
+
+                  {hoveredIndex !== null && points[hoveredIndex] && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        pointerEvents: 'none',
+                        background: 'rgba(8, 12, 20, 0.90)',
+                        backdropFilter: 'blur(20px) saturate(160%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                        border: '1px solid rgba(255, 255, 255, 0.10)',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                        padding: '8px 12px',
+                        fontSize: '11px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        zIndex: 20,
+                        left: `${(points[hoveredIndex].x / svgWidth) * 100}%`,
+                        top: `${(points[hoveredIndex].y / svgHeight) * 100 - 15}%`,
+                        transform: 'translate(-50%, -100%)',
+                        display: 'flex',
+                        flexDirection: 'column' as const,
+                        gap: '3px',
+                        minWidth: '110px',
+                      }}
+                    >
+                      <span className="text-[9px] uppercase tracking-[0.1em]" style={{ color: 'rgba(161,181,204,0.7)' }}>
+                        {points[hoveredIndex].semana}
+                      </span>
+                      <span className="text-white font-bold text-xs">
+                        Leads: <span style={{ color: '#FF6500' }}>{points[hoveredIndex].leads_criados}</span>
+                      </span>
+                      <span className="text-[10px]" style={{ color: '#A1B5CC' }}>
+                        Propostas: {points[hoveredIndex].propostas}
+                      </span>
+                      <span className="text-[10px]" style={{ color: '#A1B5CC' }}>
+                        Fechados: {points[hoveredIndex].fechados}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
                 <div
+                  className="rounded-xl p-12 text-center"
                   style={{
-                    position:             'absolute',
-                    pointerEvents:        'none',
-                    background:           'rgba(8, 12, 20, 0.90)',
-                    backdropFilter:       'blur(20px) saturate(160%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-                    border:               '1px solid rgba(255, 255, 255, 0.10)',
-                    borderRadius:         '8px',
-                    boxShadow:            '0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
-                    padding:              '8px 12px',
-                    fontSize:             '11px',
-                    fontFamily:           'JetBrains Mono, monospace',
-                    zIndex:               20,
-                    left:                 `${(points[hoveredIndex].x / svgWidth) * 100}%`,
-                    top:                  `${(points[hoveredIndex].y / svgHeight) * 100 - 15}%`,
-                    transform:            'translate(-50%, -100%)',
-                    display:              'flex',
-                    flexDirection:        'column',
-                    gap:                  '3px',
-                    minWidth:             '110px',
+                    background: 'rgba(255,255,255,0.01)',
+                    border: '1px solid rgba(255,255,255,0.04)',
                   }}
                 >
-                  <span style={{ fontSize: '9px', color: 'rgba(161,181,204,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                    {points[hoveredIndex].semana}
-                  </span>
-                  <span style={{ color: 'white', fontWeight: 700, fontSize: '12px' }}>
-                    Leads: <span style={{ color: '#FF6500' }}>{points[hoveredIndex].leads_criados}</span>
-                  </span>
-                  <span style={{ color: '#A1B5CC', fontSize: '10px' }}>
-                    Propostas: {points[hoveredIndex].propostas}
-                  </span>
-                  <span style={{ color: '#A1B5CC', fontSize: '10px' }}>
-                    Fechados: {points[hoveredIndex].fechados}
-                  </span>
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="mx-auto mb-3">
+                    <path
+                      d="M4 24 L10 16 L16 18 L22 10 L28 8"
+                      stroke="rgba(30,62,98,0.45)"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="28" cy="8" r="2" fill="rgba(30,62,98,0.45)" />
+                  </svg>
+                  <p className="text-sm font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.50)' }}>
+                    Sem dados suficientes
+                  </p>
+                  <p className="text-[13px] mb-4" style={{ color: '#A1B5CC' }}>
+                    Crie mais leads para ver a evolução semanal.
+                  </p>
+                  <a
+                    href="/pipeline"
+                    className="text-[13px] font-medium no-underline inline-flex items-center gap-1 transition-opacity duration-150 hover:opacity-75"
+                    style={{ color: '#FF6500' }}
+                  >
+                    Ir para o Pipeline →
+                  </a>
                 </div>
               )}
-            </div>
-          ) : (
-            // § 5 — ≤1 ponto: empty state ultra-sutil com CTA para Pipeline
-            <div style={{
-              borderRadius: '12px',
-              padding:      '48px 32px',
-              textAlign:    'center',
-              background:   'rgba(255,255,255,0.01)',
-              border:       '1px solid rgba(255,255,255,0.04)',
-            }}>
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}>
-                <path
-                  d="M4 24 L10 16 L16 18 L22 10 L28 8"
-                  stroke="rgba(30,62,98,0.45)"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <circle cx="28" cy="8" r="2" fill="rgba(30,62,98,0.45)" />
-              </svg>
-              <p style={{ color: 'rgba(255,255,255,0.50)', fontWeight: 600, margin: '0 0 6px 0', fontSize: '14px' }}>
-                Sem dados suficientes
-              </p>
-              <p style={{ color: '#A1B5CC', fontSize: '13px', margin: '0 0 16px 0' }}>
-                Crie mais leads para ver a evolução semanal.
-              </p>
-              <a
-                href="/pipeline"
-                style={{
-                  color:          '#FF6500',
-                  fontSize:       '13px',
-                  fontWeight:     500,
-                  textDecoration: 'none',
-                  display:        'inline-flex',
-                  alignItems:     'center',
-                  gap:            '4px',
-                  transition:     'opacity 150ms ease',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
-                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-              >
-                Ir para o Pipeline →
-              </a>
-            </div>
-          )}
-        </LiquidGlassCard>
+            </LiquidGlassCard>
+          </BentoItem>
+
+          {/* Dot Matrix — Funnel Breakdown */}
+          <BentoItem>
+            <LiquidGlassCard style={{ padding: '24px', height: '100%' }}>
+              <div className="mb-5">
+                <h2 className="text-[16px] font-semibold text-white tracking-[-0.3px] m-0">
+                  Funil por Status
+                </h2>
+                <p className="text-xs mt-1 m-0" style={{ color: '#A1B5CC' }}>
+                  Distribuição atual dos leads
+                </p>
+              </div>
+
+              {loading ? (
+                <div className="flex flex-col items-center justify-center min-h-[180px] gap-3">
+                  <div className="ds-spinner" />
+                  <p className="text-[10px] font-mono" style={{ color: 'rgba(161,181,204,0.6)' }}>
+                    Carregando funil...
+                  </p>
+                </div>
+              ) : m.funnel.length > 0 && m.funnel.some(f => f.value > 0) ? (
+                <DotMatrixChart data={m.funnel} accentColor="#FF6500" rows={7} />
+              ) : (
+                <div className="flex items-center justify-center min-h-[180px]">
+                  <p className="text-[13px]" style={{ color: 'rgba(161,181,204,0.5)' }}>
+                    Nenhum lead cadastrado ainda
+                  </p>
+                </div>
+              )}
+            </LiquidGlassCard>
+          </BentoItem>
+        </BentoGrid>
 
       </main>
     </div>

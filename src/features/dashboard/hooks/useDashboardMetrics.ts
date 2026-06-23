@@ -8,6 +8,7 @@ export interface DashboardMetrics {
   total_propostas: number
   fechados_mes: number
   taxa_conversao: number
+  funnel: Array<{ label: string; value: number }>
 }
 
 function computeMetrics(leads: Lead[]): DashboardMetrics {
@@ -27,11 +28,23 @@ function computeMetrics(leads: Lead[]): DashboardMetrics {
     ? Math.round((leads.filter(l => l.status === 'fechado').length / totalFinalizados) * 100)
     : 0
 
+  const statusCounts: Record<string, number> = {}
+  for (const lead of leads) {
+    statusCounts[lead.status] = (statusCounts[lead.status] || 0) + 1
+  }
+
   return {
     total_leads: active.length,
     total_propostas: propostas.length,
     fechados_mes: fechadosMes.length,
     taxa_conversao: taxa,
+    funnel: [
+      { label: 'Novo', value: statusCounts['novo'] || 0 },
+      { label: 'Contato', value: statusCounts['em_contato'] || 0 },
+      { label: 'Proposta', value: statusCounts['proposta_enviada'] || 0 },
+      { label: 'Fechado', value: statusCounts['fechado'] || 0 },
+      { label: 'Perdido', value: statusCounts['perdido'] || 0 },
+    ],
   }
 }
 
