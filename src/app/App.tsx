@@ -1,13 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './providers'
+import { useTenant, tenantNeedsSetup } from '@/lib/tenant'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { PipelinePage } from '@/features/leads/PipelinePage'
+import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuth()
+  const { session, user, loading: authLoading } = useAuth()
+  const { tenant, loading: tenantLoading } = useTenant()
+  const location = useLocation()
 
-  if (loading) {
+  if (authLoading || tenantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="ds-spinner" />
@@ -16,6 +20,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) return <Navigate to="/login" replace />
+
+  if (tenantNeedsSetup(tenant, user?.email ?? undefined) && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />
+  }
+
   return <>{children}</>
 }
 
@@ -36,6 +45,14 @@ export function App() {
         <Route
           path="/login"
           element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/dashboard"
