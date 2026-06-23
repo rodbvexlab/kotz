@@ -36,7 +36,7 @@ export function PipelinePage() {
   // ─── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center font-sans">
+      <div className="min-h-screen flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <div className="ds-spinner" />
           <p className="text-[#A1B5CC] text-xs font-mono">Carregando pipeline...</p>
@@ -48,13 +48,13 @@ export function PipelinePage() {
   // ─── Erro ─────────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center max-w-sm">
           <AlertCircle size={24} className="text-[#FF6500]" />
           <p className="text-white text-sm font-medium">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-xs text-[#1E3E62] hover:text-white transition-colors"
+            className="text-xs text-[#A1B5CC]/50 hover:text-white transition-colors"
           >
             Tentar novamente
           </button>
@@ -64,7 +64,7 @@ export function PipelinePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black">
+    <div className="flex flex-col min-h-screen">
       <AppNav />
 
       {/* Pipeline header */}

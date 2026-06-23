@@ -103,18 +103,45 @@ function DSInput({
   placeholder?: string
   required?: boolean
 }) {
+  const [focused, setFocused] = useState(false)
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-widest">
-        {label}{required && <span className="text-[#FF6500] ml-0.5">*</span>}
+      <label
+        style={{
+          fontSize: '10px',
+          fontWeight: 600,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color: '#A1B5CC',
+        }}
+      >
+        {label}{required && <span style={{ color: '#FF6500', marginLeft: '3px' }}>*</span>}
       </label>
       <input
         type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full text-[13px] text-white placeholder-[#A1B5CC]/35 bg-black/35 border border-white/[0.08] rounded-lg px-3 py-2.5 outline-none transition-all duration-150 focus:border-[#FF6500]/45 focus:ring-2 focus:ring-[#FF6500]/08 focus:bg-black/45"
-        style={{ fontFamily: 'Inter, sans-serif' }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: '100%',
+          fontSize: '13px',
+          color: '#ffffff',
+          background: focused ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.04)',
+          border: focused
+            ? '1px solid rgba(255, 101, 0, 0.45)'
+            : '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: focused
+            ? '0 0 0 3px rgba(255,101,0,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.03)',
+          borderRadius: '8px',
+          padding: '9px 12px',
+          outline: 'none',
+          transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
+          fontFamily: 'Inter, sans-serif',
+        }}
+        className="placeholder:text-[#A1B5CC]/30"
       />
     </div>
   )
@@ -130,9 +157,18 @@ function DSTextarea({
   placeholder?: string
   rows?: number
 }) {
+  const [focused, setFocused] = useState(false)
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-widest">
+      <label
+        style={{
+          fontSize: '10px',
+          fontWeight: 600,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color: '#A1B5CC',
+        }}
+      >
         {label}
       </label>
       <textarea
@@ -140,8 +176,27 @@ function DSTextarea({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="w-full text-[13px] text-white placeholder-[#A1B5CC]/35 bg-black/35 border border-white/[0.08] rounded-lg px-3 py-2.5 outline-none resize-none transition-all duration-150 focus:border-[#FF6500]/45 focus:ring-2 focus:ring-[#FF6500]/08 focus:bg-black/45"
-        style={{ fontFamily: 'Inter, sans-serif' }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: '100%',
+          fontSize: '13px',
+          color: '#ffffff',
+          background: focused ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.04)',
+          border: focused
+            ? '1px solid rgba(255, 101, 0, 0.45)'
+            : '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: focused
+            ? '0 0 0 3px rgba(255,101,0,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.03)',
+          borderRadius: '8px',
+          padding: '9px 12px',
+          outline: 'none',
+          resize: 'none',
+          transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
+          fontFamily: 'Inter, sans-serif',
+        }}
+        className="placeholder:text-[#A1B5CC]/30"
       />
     </div>
   )
@@ -639,10 +694,20 @@ export function LeadPanel({
                       type="button"
                       onClick={handleSaveEdit}
                       disabled={isSavingEdit || !form.name.trim()}
-                      className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-white rounded-lg transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer"
+                      className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.98]"
                       style={{
-                        background: '#FF6500',
-                        boxShadow:  isSavingEdit ? 'none' : '0 2px 12px rgba(255,101,0,0.25)',
+                        background: isSavingEdit
+                          ? 'rgba(255,101,0,0.55)'
+                          : 'linear-gradient(135deg, #FF6500 0%, #e85500 100%)',
+                        boxShadow: isSavingEdit
+                          ? 'none'
+                          : '0 2px 8px rgba(255,101,0,0.30), inset 0 1px 0 rgba(255,255,255,0.15)',
+                      }}
+                      onMouseEnter={e => {
+                        if (!isSavingEdit) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 16px rgba(255,101,0,0.45), inset 0 1px 0 rgba(255,255,255,0.20)'
+                      }}
+                      onMouseLeave={e => {
+                        if (!isSavingEdit) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(255,101,0,0.30), inset 0 1px 0 rgba(255,255,255,0.15)'
                       }}
                     >
                       {isSavingEdit

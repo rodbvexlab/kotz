@@ -111,19 +111,29 @@ export function KanbanColumn({ column, leads, isOver, onOpenLead, onAddLead }: K
           />
         )}
 
-        {/* Empty state */}
+        {/* Empty state — ultra sutil, sem border-dashed */}
         {leads.length === 0 && !adding && (
-          <div className={[
-            'flex-1 flex items-center justify-center rounded-xl border-2 border-dashed py-8 min-h-[80px]',
-            isDrop
-              ? 'border-[#1E3E62]/10 text-[#1E3E62]/20'
-              : isOver
-                ? 'border-[#FF6500]/30 text-[#FF6500]/40'
-                : 'border-[#1E3E62]/15 text-[#1E3E62]/30',
-          ].join(' ')}>
-            <span className="text-xs">
-              {isOver ? 'Soltar aqui' : isDrop ? '—' : 'Sem leads'}
-            </span>
+          <div
+            className="flex-1 flex items-center justify-center rounded-xl py-10 min-h-[80px] transition-all duration-200"
+            style={{
+              background: isOver && !isDrop
+                ? 'rgba(255, 101, 0, 0.03)'
+                : 'rgba(255, 255, 255, 0.01)',
+              border: isOver && !isDrop
+                ? '1px solid rgba(255, 101, 0, 0.15)'
+                : '1px solid rgba(255, 255, 255, 0.04)',
+            }}
+          >
+            {isOver && !isDrop ? (
+              <span className="text-[11px] font-mono text-[#FF6500]/50 tracking-wider">
+                soltar aqui
+              </span>
+            ) : isDrop ? null : (
+              <span
+                className="w-1 h-1 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+              />
+            )}
           </div>
         )}
       </div>
