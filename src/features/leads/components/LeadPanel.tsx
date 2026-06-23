@@ -1,13 +1,15 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'motion/react'
 import {
   X, Instagram, MessageCircle, Users, Calendar,
   PlusCircle, Sparkles, Edit2, Check, Loader2,
-  ChevronDown, Phone,
+  ChevronDown, Phone, Mail, Video, StickyNote,
+  Send,
 } from 'lucide-react'
 import type { Lead, LeadStatus, LeadChannel } from '@/types/pipeline'
-import type { LeadInteraction } from '@/types/database'
+import type { LeadInteraction, InteractionType } from '@/types/database'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useUpdateLead, type UpdateLeadPayload } from '../hooks/useUpdateLead'
 
@@ -87,9 +89,44 @@ function formatDate(iso: string) {
 }
 
 function formatInteractionDate(iso: string) {
+  const date = new Date(iso)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+  if (diffMins < 1) return 'Agora mesmo'
+  if (diffMins < 60) return `Há ${diffMins}min`
+  if (diffHours < 24 && date.getDate() === now.getDate()) return `Hoje às ${time}`
+
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth()) {
+    return `Ontem às ${time}`
+  }
+
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-  }).format(new Date(iso))
+  }).format(date)
+}
+
+const INTERACTION_TYPES: Array<{
+  type: InteractionType
+  label: string
+  icon: React.ReactNode
+  color: string
+}> = [
+  { type: 'note',    label: 'Nota',    icon: <StickyNote size={13} />, color: '#A1B5CC' },
+  { type: 'call',    label: 'Ligação', icon: <Phone size={13} />,     color: '#4ADE80' },
+  { type: 'email',   label: 'E-mail',  icon: <Mail size={13} />,      color: '#60A5FA' },
+  { type: 'meeting', label: 'Reunião', icon: <Video size={13} />,     color: '#F59E0B' },
+]
+
+function getInteractionIcon(type: InteractionType) {
+  const meta = INTERACTION_TYPES.find(t => t.type === type)
+  return { icon: meta?.icon ?? <StickyNote size={13} />, color: meta?.color ?? '#A1B5CC' }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -401,6 +438,7 @@ export function LeadPanel({
 
   // ── Interaction form state ──────────────────────────────────────────────────
   const [newContent, setNewContent] = useState('')
+  const [selectedType, setSelectedType] = useState<InteractionType>('note')
   const [isSavingInteraction, setIsSavingInteraction] = useState(false)
 
   // ── Edit mode state ─────────────────────────────────────────────────────────
@@ -450,8 +488,9 @@ export function LeadPanel({
     if (!newContent.trim() || !lead) return
     setIsSavingInteraction(true)
     try {
-      await onAddInteraction(newContent.trim())
+      await onAddInteraction(newContent.trim(), selectedType)
       setNewContent('')
+      setSelectedType('note')
     } catch (err) {
       console.error('Erro ao salvar interação:', err)
     } finally {
@@ -736,78 +775,150 @@ export function LeadPanel({
 
               {/* ── Nova Interação ── */}
               <div>
-                <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-2">
+                <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-3">
                   Registrar Nova Interação
                 </p>
+
+                {/* Type toggle buttons */}
+                <div className="flex gap-1.5 mb-3">
+                  {INTERACTION_TYPES.map(({ type, label, icon, color }) => {
+                    const isActive = selectedType === type
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setSelectedType(type)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-150 cursor-pointer"
+                        style={{
+                          background: isActive ? `${color}15` : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${isActive ? `${color}40` : 'rgba(255,255,255,0.06)'}`,
+                          color: isActive ? color : 'rgba(161,181,204,0.6)',
+                        }}
+                      >
+                        {icon}
+                        <span className="hidden sm:inline">{label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
                 <form onSubmit={handleSaveInteraction} className="relative">
                   <textarea
                     value={newContent}
                     onChange={e => setNewContent(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSaveInteraction(e)
+                      }
+                    }}
                     placeholder="O que foi conversado com o lead?"
                     rows={3}
-                    className="w-full text-[13px] bg-black/35 border border-[#1E3E62]/40 focus:border-[#FF6500]/45 focus:ring-2 focus:ring-[#FF6500]/08 rounded-lg p-3 text-white placeholder-[#A1B5CC]/35 outline-none resize-none transition-all duration-150"
+                    className="w-full text-[13px] bg-white/[0.03] border border-white/[0.08] focus:border-[#FF6500]/40 focus:ring-1 focus:ring-[#FF6500]/10 rounded-xl p-3 pr-11 text-white placeholder-white/25 outline-none resize-none transition-all duration-150"
                   />
-                  <div className={`transition-all duration-200 ease-out overflow-hidden flex justify-end ${
-                    newContent.trim()
-                      ? 'opacity-100 max-h-12 translate-y-0 mt-2'
-                      : 'opacity-0 max-h-0 -translate-y-1 pointer-events-none'
-                  }`}>
-                    <button
-                      type="submit"
-                      disabled={isSavingInteraction}
-                      className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold text-white rounded-lg transition-all disabled:opacity-60 cursor-pointer hover:brightness-110"
-                      style={{ background: '#FF6500', boxShadow: '0 2px 12px rgba(255,101,0,0.22)' }}
-                    >
-                      <PlusCircle size={13} />
-                      {isSavingInteraction ? 'Salvando…' : 'Salvar Interação'}
-                    </button>
-                  </div>
+                  {/* Send button inside textarea */}
+                  <button
+                    type="submit"
+                    disabled={!newContent.trim() || isSavingInteraction}
+                    className="absolute right-2.5 bottom-2.5 w-7 h-7 flex items-center justify-center rounded-lg transition-all duration-150 disabled:opacity-20 cursor-pointer"
+                    style={{
+                      background: newContent.trim() ? '#FF6500' : 'transparent',
+                      boxShadow: newContent.trim() ? '0 2px 8px rgba(255,101,0,0.25)' : 'none',
+                    }}
+                  >
+                    {isSavingInteraction
+                      ? <Loader2 size={13} className="text-white animate-spin" />
+                      : <Send size={13} className="text-white" />
+                    }
+                  </button>
                 </form>
               </div>
 
               {/* ── Timeline ── */}
-              <div className="space-y-3">
-                <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider">
-                  Histórico de Interações
+              <div>
+                <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-4">
+                  Histórico
+                  {sortedInteractions.length > 0 && (
+                    <span className="ml-1.5 text-white/30 font-mono">{sortedInteractions.length}</span>
+                  )}
                 </p>
 
                 {loadingInteractions ? (
                   <div className="flex flex-col items-center justify-center p-8 gap-3">
-                    <div className="w-5 h-5 border-2 border-[#FF6500] border-t-transparent rounded-full animate-spin" />
-                    <p className="text-[10px] font-mono text-[#A1B5CC]/60">Carregando timeline…</p>
+                    <div className="ds-spinner" />
+                    <p className="text-[10px] font-mono text-[#A1B5CC]/50">Carregando timeline…</p>
                   </div>
                 ) : sortedInteractions.length === 0 ? (
-                  <div className="rounded-xl border border-[#1E3E62]/15 bg-black/10 p-6 text-center">
-                    <p className="text-xs text-[#A1B5CC]/40">Nenhuma interação registrada ainda.</p>
+                  <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-8 text-center">
+                    <MessageCircle size={20} className="mx-auto mb-2 text-white/15" />
+                    <p className="text-[13px] text-white/30">Nenhuma interação registrada.</p>
+                    <p className="text-[11px] text-white/15 mt-1">Registre notas, ligações ou e-mails acima.</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col mt-4">
-                    {sortedInteractions.map((item, idx) => {
-                      const isNewest = idx === 0
-                      return (
-                        <div key={item.id} className="relative pl-6 pb-6 last:pb-0">
-                          {idx !== sortedInteractions.length - 1 && (
-                            <div className="absolute left-[7px] top-4 bottom-0 w-0.5 bg-[#1E3E62]/20" />
-                          )}
-                          {isNewest ? (
-                            <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 border-[#FF6500] flex items-center justify-center bg-[#080c14] z-10">
-                              <div className="absolute inset-0 rounded-full bg-[#FF6500]/40 animate-ping opacity-75" />
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#FF6500] relative z-10" />
+                  <div className="relative">
+                    {/* Vertical timeline line */}
+                    <div className="absolute left-[13px] top-2 bottom-0 w-px bg-white/[0.08]" />
+
+                    <AnimatePresence initial={false}>
+                      {sortedInteractions.map((item, idx) => {
+                        const isNewest = idx === 0
+                        const { icon: typeIcon, color: typeColor } = getInteractionIcon(item.type ?? 'note')
+
+                        return (
+                          <motion.div
+                            key={item.id}
+                            initial={{ opacity: 0, x: 12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -12 }}
+                            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative pl-9 pb-5 last:pb-0"
+                          >
+                            {/* Timeline node */}
+                            <div
+                              className="absolute left-1 top-1 w-[22px] h-[22px] rounded-full flex items-center justify-center z-10"
+                              style={{
+                                background: '#080c14',
+                                border: `2px solid ${isNewest ? typeColor : 'rgba(30,62,98,0.40)'}`,
+                                boxShadow: isNewest ? `0 0 8px ${typeColor}30` : 'none',
+                                color: isNewest ? typeColor : 'rgba(30,62,98,0.60)',
+                              }}
+                            >
+                              <span style={{ transform: 'scale(0.75)' }}>{typeIcon}</span>
                             </div>
-                          ) : (
-                            <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 border-[#1E3E62]/60 flex items-center justify-center bg-[#080c14]">
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#1E3E62]/60" />
+
+                            {/* Content card */}
+                            <div
+                              className="rounded-xl px-3.5 py-3 transition-colors duration-150"
+                              style={{
+                                background: isNewest ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
+                                border: `1px solid ${isNewest ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}`,
+                              }}
+                            >
+                              {/* Meta row */}
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span
+                                  className="text-[9px] font-semibold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded"
+                                  style={{
+                                    color: typeColor,
+                                    background: `${typeColor}12`,
+                                  }}
+                                >
+                                  {INTERACTION_TYPES.find(t => t.type === (item.type ?? 'note'))?.label ?? 'Nota'}
+                                </span>
+                                <span className="text-[10px] font-mono text-white/30">
+                                  {formatInteractionDate(item.created_at)}
+                                </span>
+                              </div>
+
+                              {/* Content */}
+                              <p className="text-[13px] text-white/70 leading-relaxed whitespace-pre-wrap">
+                                {item.content}
+                              </p>
                             </div>
-                          )}
-                          <span className="block text-[10px] font-mono text-[#A1B5CC]/70 tracking-tight">
-                            {formatInteractionDate(item.created_at)}
-                          </span>
-                          <p className="text-[13px] text-white/95 mt-1 leading-relaxed whitespace-pre-wrap">
-                            {item.content}
-                          </p>
-                        </div>
-                      )
-                    })}
+                          </motion.div>
+                        )
+                      })}
+                    </AnimatePresence>
                   </div>
                 )}
               </div>
