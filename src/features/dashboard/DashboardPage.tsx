@@ -3,6 +3,7 @@ import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { useChartData } from './hooks/useChartData'
 import { AppNav } from '@/components/layout/AppNav'
+import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard'
 
 // ─── Design System §5 — MetricCard accent per card ────────────────────────────
 const CARDS = [
@@ -33,23 +34,11 @@ const CARDS = [
 const SPARKLINE_PATH = 'M0,20 C30,19 60,16 90,13 C120,10 150,7 180,4'
 const SPARKLINE_AREA = 'M0,20 C30,19 60,16 90,13 C120,10 150,7 180,4 L180,24 L0,24 Z'
 
-// ─── Shared glass styles ───────────────────────────────────────────────────────
-const GLASS_CARD: React.CSSProperties = {
-  background:           'rgba(255, 255, 255, 0.04)',
-  backdropFilter:       'blur(24px) saturate(170%)',
-  WebkitBackdropFilter: 'blur(24px) saturate(170%)',
-  border:               '1px solid rgba(255, 255, 255, 0.08)',
-  borderRadius:         '14px',
-  boxShadow:            '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
-  transition:           'box-shadow 200ms ease, border-color 200ms ease',
-}
-
 export function DashboardPage() {
   const { tenant } = useTenant()
   const { metrics, loading } = useDashboardMetrics()
   const { data: chartData, loading: chartLoading } = useChartData()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
 
   const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
 
@@ -161,26 +150,14 @@ export function DashboardPage() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap:                 '16px',
         }}>
-          {CARDS.map(({ id, label, accent, sparkColor, key }) => {
-            const isHovered = hoveredCardId === id
-            return (
-              <div
-                key={id}
-                onMouseEnter={() => setHoveredCardId(id)}
-                onMouseLeave={() => setHoveredCardId(null)}
-                style={{
-                  ...GLASS_CARD,
-                  borderLeft: `3px solid ${accent}`,
-                  padding:    '22px 24px',
-                  ...(isHovered ? {
-                    background: 'rgba(255, 255, 255, 0.07)',
-                    borderColor: 'rgba(255, 255, 255, 0.16)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.12)',
-                    transform: 'translateY(-2px)',
-                  } : {}),
-                  transition: 'all 250ms cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-              >
+          {CARDS.map(({ id, label, accent, sparkColor, key }) => (
+            <LiquidGlassCard
+              key={id}
+              style={{
+                borderLeft: `3px solid ${accent}`,
+                padding:    '22px 24px',
+              }}
+            >
               {/* Label: UPPERCASE 11px #A1B5CC letter-spacing 0.12em weight-600 */}
               <p style={{
                 fontSize:      '11px',
@@ -224,16 +201,17 @@ export function DashboardPage() {
                   opacity="0.55"
                 />
               </svg>
-            </div>
-          )})}
+            </LiquidGlassCard>
+          ))}
         </div>
 
         {/* ─── § 5 Gráfico Pipeline — glass-metric, padding 24px ─────────── */}
-        <div style={{
-          ...GLASS_CARD,
-          padding:  '24px',
-          position: 'relative',
-        }}>
+        <LiquidGlassCard
+          style={{
+            padding:  '24px',
+            position: 'relative',
+          }}
+        >
           {/* Header do gráfico */}
           <div style={{
             display:        'flex',
@@ -471,7 +449,7 @@ export function DashboardPage() {
               </a>
             </div>
           )}
-        </div>
+        </LiquidGlassCard>
 
       </main>
     </div>
