@@ -36,10 +36,10 @@ export function PipelinePage() {
   // ─── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-6 h-6 border-2 border-[#FF6500] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[#1E3E62] text-sm">Carregando pipeline...</p>
+          <div className="ds-spinner" />
+          <p className="text-[#A1B5CC] text-xs font-mono">Carregando pipeline...</p>
         </div>
       </div>
     )
@@ -70,7 +70,7 @@ export function PipelinePage() {
       {/* Pipeline header */}
       <div className="px-6 pt-6 pb-4 shrink-0">
         <h1 className="text-2xl font-bold text-white tracking-tight">Pipeline</h1>
-        <p className="text-sm text-[#1E3E62] mt-0.5">
+        <p className="text-sm text-[#A1B5CC] mt-0.5">
           {activeCount} {activeCount === 1 ? 'lead ativo' : 'leads ativos'}
         </p>
       </div>

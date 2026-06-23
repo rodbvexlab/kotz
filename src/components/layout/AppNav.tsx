@@ -17,7 +17,7 @@ export function AppNav() {
     s.replace(/\b\w/g, c => c.toUpperCase())
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3 bg-black/80 backdrop-blur-md border-b border-[#1E3E62]/20">
+    <header className="glass-nav sticky top-0 z-30 flex items-center justify-between px-6 py-3">
 
       {/* Esquerda: Logo + links */}
       <div className="flex items-center gap-6">
