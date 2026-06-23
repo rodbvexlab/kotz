@@ -87,7 +87,6 @@ export function LeadPanel({
     e.preventDefault()
     if (!newContent.trim() || !lead) return
 
-    console.log('[LeadPanel] onAddInteraction chamado:', newContent.trim())
     setIsSaving(true)
     try {
       await onAddInteraction(newContent.trim())
