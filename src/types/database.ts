@@ -168,6 +168,39 @@ export interface Database {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          id: string
+          lead_id: string
+          tenant_id: string
+          title: string
+          due_date: string
+          status: 'pending' | 'completed'
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          tenant_id: string
+          title: string
+          due_date: string
+          status?: 'pending' | 'completed'
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          tenant_id?: string
+          title?: string
+          due_date?: string
+          status?: 'pending' | 'completed'
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       lead_interactions: {
         Row: {
           id: string
@@ -221,6 +254,8 @@ export type Tenant = Database['public']['Tables']['tenants']['Row']
 export type Lead = Database['public']['Tables']['leads']['Row']
 export type Company = Database['public']['Tables']['companies']['Row']
 export type Contact = Database['public']['Tables']['contacts']['Row']
+export type Task = Database['public']['Tables']['tasks']['Row']
+export type TaskStatus = Task['status']
 export type LeadInteraction = Database['public']['Tables']['lead_interactions']['Row']
 export type InteractionType = LeadInteraction['type']
 export type LeadStatus = Lead['status']

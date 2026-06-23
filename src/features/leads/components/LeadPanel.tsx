@@ -6,13 +6,15 @@ import {
   X, Instagram, MessageCircle, Users, Calendar,
   PlusCircle, Sparkles, Edit2, Check, Loader2,
   ChevronDown, Phone, Mail, Video, StickyNote,
-  Send, Building, UserCircle,
+  Send, Building, UserCircle, ClipboardList,
 } from 'lucide-react'
 import type { Lead, LeadStatus, LeadChannel } from '@/types/pipeline'
 import type { LeadInteraction, InteractionType, Company, Contact } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useUpdateLead, type UpdateLeadPayload } from '../hooks/useUpdateLead'
+import { useTasks } from '../hooks/useTasks'
+import type { Task } from '@/types/database'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,6 +128,22 @@ const INTERACTION_TYPES: Array<{
   { type: 'email',   label: 'E-mail',  icon: <Mail size={13} />,      color: '#60A5FA' },
   { type: 'meeting', label: 'Reunião', icon: <Video size={13} />,     color: '#F59E0B' },
 ]
+
+function formatTaskDate(iso: string) {
+  const date = new Date(iso)
+  const now = new Date()
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+  if (date.toDateString() === now.toDateString()) return `Hoje às ${time}`
+
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  if (date.toDateString() === tomorrow.toDateString()) return `Amanhã às ${time}`
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+  }).format(date)
+}
 
 function getInteractionIcon(type: InteractionType) {
   const meta = INTERACTION_TYPES.find(t => t.type === type)
@@ -477,6 +495,22 @@ export function LeadPanel({
   }, [lead?.id, lead?.company_id, lead?.contact_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { updateLead } = useUpdateLead()
+
+  // ── Tasks ──────────────────────────────────────────────────────────────────
+  const { tasks, loading: loadingTasks, addTask, toggleTask } = useTasks(lead?.id ?? null)
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [newTaskDate, setNewTaskDate] = useState('')
+  const [isSavingTask, setIsSavingTask] = useState(false)
+
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newTaskTitle.trim() || !newTaskDate) return
+    setIsSavingTask(true)
+    await addTask(newTaskTitle.trim(), new Date(newTaskDate).toISOString())
+    setNewTaskTitle('')
+    setNewTaskDate('')
+    setIsSavingTask(false)
+  }
 
   // Sync URL quando abre/fecha
   useEffect(() => {
@@ -1071,6 +1105,116 @@ export function LeadPanel({
                         )
                       })}
                     </AnimatePresence>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Divisor ── */}
+              <div className="h-px bg-[#1E3E62]/20" />
+
+              {/* ── Tarefas / Follow-ups ── */}
+              <div>
+                <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-3 flex items-center gap-1.5">
+                  <ClipboardList size={11} className="text-[#A1B5CC]/60" />
+                  Tarefas
+                  {tasks.filter(t => t.status === 'pending').length > 0 && (
+                    <span className="text-white/30 font-mono">{tasks.filter(t => t.status === 'pending').length}</span>
+                  )}
+                </p>
+
+                {/* New task form */}
+                <form onSubmit={handleAddTask} className="space-y-2 mb-4">
+                  <input
+                    type="text"
+                    value={newTaskTitle}
+                    onChange={e => setNewTaskTitle(e.target.value)}
+                    placeholder="Ex: Ligar para cliente, Enviar contrato..."
+                    className="w-full rounded-xl px-3 py-2 text-[13px] bg-white/[0.03] border border-white/[0.08] text-white placeholder-white/25 outline-none transition-all duration-150 focus:border-[#FF6500]/40 focus:ring-1 focus:ring-[#FF6500]/10"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="datetime-local"
+                      value={newTaskDate}
+                      onChange={e => setNewTaskDate(e.target.value)}
+                      className="flex-1 rounded-xl px-3 py-2 text-[12px] font-mono bg-white/[0.03] border border-white/[0.08] text-white/70 outline-none transition-all duration-150 focus:border-[#FF6500]/40 focus:ring-1 focus:ring-[#FF6500]/10 [color-scheme:dark]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newTaskTitle.trim() || !newTaskDate || isSavingTask}
+                      className="px-3 py-2 rounded-xl text-[12px] font-semibold transition-all duration-150 disabled:opacity-30 cursor-pointer"
+                      style={{
+                        background: newTaskTitle.trim() && newTaskDate ? '#FF6500' : 'transparent',
+                        color: '#fff',
+                        boxShadow: newTaskTitle.trim() && newTaskDate ? '0 2px 8px rgba(255,101,0,0.25)' : 'none',
+                      }}
+                    >
+                      {isSavingTask ? <Loader2 size={13} className="animate-spin" /> : <PlusCircle size={13} />}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Task list */}
+                {loadingTasks ? (
+                  <div className="flex justify-center py-4">
+                    <div className="ds-spinner" />
+                  </div>
+                ) : tasks.length === 0 ? (
+                  <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-6 text-center">
+                    <p className="text-[13px] text-white/30">Nenhuma tarefa cadastrada.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {tasks.map(task => {
+                      const isOverdue = task.status === 'pending' && new Date(task.due_date) < new Date()
+                      const isCompleted = task.status === 'completed'
+                      const dueLabel = formatTaskDate(task.due_date)
+
+                      return (
+                        <motion.div
+                          key={task.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-start gap-2.5 rounded-xl px-3 py-2.5 transition-colors duration-150"
+                          style={{
+                            background: isOverdue ? 'rgba(179,38,30,0.08)' : 'rgba(255,255,255,0.02)',
+                            border: `1px solid ${isOverdue ? 'rgba(179,38,30,0.20)' : 'rgba(255,255,255,0.04)'}`,
+                          }}
+                        >
+                          {/* Checkbox */}
+                          <button
+                            onClick={() => toggleTask(task.id)}
+                            className="mt-0.5 w-[18px] h-[18px] rounded-md border-2 flex items-center justify-center shrink-0 cursor-pointer transition-all duration-150"
+                            style={{
+                              borderColor: isCompleted ? '#22C55E' : isOverdue ? '#b3261e' : 'rgba(255,255,255,0.15)',
+                              background: isCompleted ? 'rgba(34,197,94,0.15)' : 'transparent',
+                            }}
+                          >
+                            {isCompleted && <Check size={11} className="text-[#22C55E]" />}
+                          </button>
+
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="text-[13px] leading-snug"
+                              style={{
+                                color: isCompleted ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.80)',
+                                textDecoration: isCompleted ? 'line-through' : 'none',
+                              }}
+                            >
+                              {task.title}
+                            </p>
+                            <span
+                              className="text-[10px] font-mono mt-0.5 block"
+                              style={{
+                                color: isOverdue ? '#b3261e' : 'rgba(161,181,204,0.5)',
+                              }}
+                            >
+                              {isOverdue && '⚠ '}{dueLabel}
+                            </span>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
                   </div>
                 )}
               </div>

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
-import { Users, Send, Trophy, TrendingUp } from 'lucide-react'
+import { Users, Send, Trophy, TrendingUp, ClipboardList, AlertTriangle } from 'lucide-react'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { useChartData } from './hooks/useChartData'
+import { usePendingTasks } from './hooks/usePendingTasks'
 import { AppNav } from '@/components/layout/AppNav'
 import { BentoGrid, BentoItem } from '@/components/ui/BentoGrid'
 import { UsageAnalyticsCard } from '@/components/ui/UsageAnalyticsCard'
@@ -14,6 +15,7 @@ export function DashboardPage() {
   const { tenant } = useTenant()
   const { metrics, loading } = useDashboardMetrics()
   const { data: chartData, loading: chartLoading } = useChartData()
+  const { tasks: pendingTasks, loading: tasksLoading } = usePendingTasks()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
@@ -352,7 +354,83 @@ export function DashboardPage() {
           </BentoItem>
         </BentoGrid>
 
+        {/* ─── Tarefas Pendentes ─────────────────────────────────────────── */}
+        <LiquidGlassCard style={{ padding: '24px' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-[#FF6500]" />
+              <h2 className="text-[16px] font-semibold text-white tracking-[-0.3px] m-0">
+                Tarefas Pendentes
+              </h2>
+              {pendingTasks.length > 0 && (
+                <span
+                  className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                  style={{
+                    color: pendingTasks.some(t => t.is_overdue) ? '#b3261e' : '#FF6500',
+                    background: pendingTasks.some(t => t.is_overdue) ? 'rgba(179,38,30,0.12)' : 'rgba(255,101,0,0.10)',
+                  }}
+                >
+                  {pendingTasks.length}
+                </span>
+              )}
+            </div>
+            <a
+              href="/pipeline"
+              className="text-[11px] font-medium text-[#FF6500] no-underline hover:opacity-75 transition-opacity"
+            >
+              Ver Pipeline →
+            </a>
+          </div>
+
+          {tasksLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="ds-spinner" />
+            </div>
+          ) : pendingTasks.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-[13px] text-white/30">Nenhuma tarefa pendente para hoje ou amanhã.</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {pendingTasks.map((task, idx) => (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: idx * 0.04 }}
+                  className="flex items-center gap-3 rounded-xl px-3.5 py-2.5"
+                  style={{
+                    background: task.is_overdue ? 'rgba(179,38,30,0.08)' : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${task.is_overdue ? 'rgba(179,38,30,0.20)' : 'rgba(255,255,255,0.04)'}`,
+                  }}
+                >
+                  {task.is_overdue && <AlertTriangle size={13} className="text-[#b3261e] shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] text-white/80 truncate">{task.title}</p>
+                    <p className="text-[10px] font-mono mt-0.5" style={{ color: task.is_overdue ? '#b3261e' : '#A1B5CC' }}>
+                      {task.lead_name}
+                      <span className="mx-1.5 text-white/15">·</span>
+                      {formatDashboardTaskDate(task.due_date)}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </LiquidGlassCard>
+
       </main>
     </div>
   )
+}
+
+function formatDashboardTaskDate(iso: string) {
+  const date = new Date(iso)
+  const now = new Date()
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (date.toDateString() === now.toDateString()) return `Hoje às ${time}`
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  if (date.toDateString() === tomorrow.toDateString()) return `Amanhã às ${time}`
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
 }
