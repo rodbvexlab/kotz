@@ -18,11 +18,11 @@
   --text-secondary: #A1B5CC;
   --text-muted:     #1E3E62;
 
-  /* Glass — valores exatos do design system */
-  --glass-card-bg:      rgba(11, 25, 44, 0.35);
-  --glass-metric-bg:    rgba(11, 25, 44, 0.50);
-  --glass-overlay-bg:   rgba(11, 25, 44, 0.75);
-  --glass-nav-bg:       rgba(0, 0, 0, 0.80);
+  /* Glass — valores exatos do design system §3 */
+  --glass-card-bg:      rgba(255, 255, 255, 0.05);
+  --glass-metric-bg:    rgba(255, 255, 255, 0.04);
+  --glass-overlay-bg:   rgba(8, 12, 20, 0.85);
+  --glass-nav-bg:       rgba(8, 12, 20, 0.80);
 
   /* Border radius semânticos */
   --radius-badge: 6px;
@@ -43,12 +43,12 @@
   body {
     background-color: #080c14;
     background-image:
-      radial-gradient(ellipse 70% 50% at 10% 30%,
-        rgba(30,62,98,0.20) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 40% at 90% 10%,
-        rgba(30,62,98,0.12) 0%, transparent 50%),
-      radial-gradient(ellipse 40% 60% at 50% 90%,
-        rgba(11,25,44,0.30) 0%, transparent 60%);
+      radial-gradient(ellipse 70% 50% at 15% 35%,
+        rgba(30,62,98,0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 85% 15%,
+        rgba(30,62,98,0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 55% at 50% 85%,
+        rgba(11,25,44,0.35) 0%, transparent 65%);
     min-height: 100vh;
     color: #ffffff;
     font-family: 'Inter', system-ui, sans-serif;
@@ -65,17 +65,15 @@
 /* ─── Components — Glass Morphism ────────────────────────────────────────── */
 @layer components {
 
-  /* glass-card — Lead cards no kanban */
+  /* glass-card — Lead cards no kanban §3 */
   .glass-card {
     background:          var(--glass-card-bg);
-    backdrop-filter:     blur(20px) saturate(200%);
-    -webkit-backdrop-filter: blur(20px) saturate(200%);
-    border:              1px solid rgba(255, 255, 255, 0.10);
+    backdrop-filter:     blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border:              1px solid rgba(255, 255, 255, 0.09);
     box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      0 2px 8px  rgba(0, 0, 0, 0.3),
-      inset 0  1px 0 rgba(255, 255, 255, 0.08),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+      0 4px 20px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
     border-radius: var(--radius-card);
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
   }
@@ -88,17 +86,16 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
-  /* glass-metric — Dashboard metric cards */
+  /* glass-metric — Dashboard metric cards §3 */
   .glass-metric {
     background:          var(--glass-metric-bg);
-    backdrop-filter:     blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter:     blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
     border:              1px solid rgba(255, 255, 255, 0.08);
-    border-top:          1px solid rgba(255, 101, 0, 0.30);
     box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 2px 16px rgba(0, 0, 0, 0.30),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    border-radius: var(--radius-panel);
+    border-radius: 14px;
     overflow: hidden;
     position: relative;
   }

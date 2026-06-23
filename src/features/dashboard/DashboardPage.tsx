@@ -4,11 +4,16 @@ import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { useChartData } from './hooks/useChartData'
 import { AppNav } from '@/components/layout/AppNav'
 
+// § 5 MetricCard — accent per card
 const CARDS = [
-  { id: 'leads',     label: 'LEADS ATIVOS',       accent: '#4A7FA5',            key: 'total_leads'    },
-  { id: 'propostas', label: 'PROPOSTAS ENVIADAS',  accent: 'rgba(255,101,0,0.8)', key: 'total_propostas' },
-  { id: 'fechados',  label: 'FECHADOS NO MÊS',     accent: '#FF6500',            key: 'fechados_mes'   },
+  { id: 'leads',     label: 'LEADS ATIVOS',       accent: '#4A7FA5',            sparkColor: 'rgba(74,127,165,0.6)',  key: 'total_leads'     },
+  { id: 'propostas', label: 'PROPOSTAS ENVIADAS',  accent: 'rgba(255,101,0,0.7)', sparkColor: 'rgba(255,101,0,0.6)',   key: 'total_propostas' },
+  { id: 'fechados',  label: 'FECHADOS NO MÊS',     accent: '#FF6500',            sparkColor: '#FF6500',              key: 'fechados_mes'    },
 ] as const
+
+// Static sparkline path — cubic bezier smooth curve (no straight lines per §5)
+const SPARKLINE_PATH = 'M0,20 C30,19 60,16 90,13 C120,10 150,7 180,4'
+const SPARKLINE_AREA = 'M0,20 C30,19 60,16 90,13 C120,10 150,7 180,4 L180,24 L0,24 Z'
 
 export function DashboardPage() {
   const { tenant } = useTenant()
@@ -47,141 +52,187 @@ export function DashboardPage() {
     return { x, y, ...d }
   })
 
-  const lineD = points.length > 1
-    ? points.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '')
-    : ''
+  // § 5 Gráfico Pipeline — cubic bezier smooth path
+  const buildSmoothPath = (pts: typeof points): string => {
+    if (pts.length < 2) return ''
+    let d = `M ${pts[0].x} ${pts[0].y}`
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cp1x = pts[i].x + (pts[i + 1].x - pts[i].x) / 3
+      const cp1y = pts[i].y
+      const cp2x = pts[i + 1].x - (pts[i + 1].x - pts[i].x) / 3
+      const cp2y = pts[i + 1].y
+      d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${pts[i + 1].x} ${pts[i + 1].y}`
+    }
+    return d
+  }
 
-  const areaD = points.length > 1
+  const lineD = buildSmoothPath(points)
+  const areaD = lineD.length > 0
     ? `${lineD} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`
     : ''
 
+  // § 5 — show chart only when chartData.length > 1
   const hasEnoughData = chartData.length > 1
 
+  // § 8 Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center font-sans">
-        <div className="flex flex-col items-center gap-4">
-          <div className="ds-spinner" />
-          <p className="text-[#A1B5CC] text-xs font-mono">Carregando painel de controle...</p>
-        </div>
+      <div style={{
+        minHeight: '100vh',
+        background: '#080c14',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div className="ds-spinner" />
       </div>
     )
   }
 
   return (
-    <div className="relative min-h-screen text-white flex flex-col font-sans selection:bg-[#FF6500] selection:text-white">
+    <div style={{ position: 'relative', minHeight: '100vh', color: 'white', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
       <AppNav />
 
-      <main className="relative flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto space-y-8 overflow-y-auto">
+      <main style={{ flex: 1, padding: '24px', maxWidth: '1200px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+        {/* Page heading */}
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
+          <h1 style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '-1px', color: 'white', margin: 0 }}>
             Olá{tenantName ? `, ${tenantName}` : ''} 👋
           </h1>
-          <p className="text-sm text-[#A1B5CC] mt-1">
+          <p style={{ fontSize: '14px', color: '#A1B5CC', marginTop: '4px' }}>
             Visão geral do seu funil
           </p>
         </div>
 
-        {/* 3 Metric Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '16px',
-          marginBottom: '24px',
-        }}>
-          {CARDS.map(({ id, label, accent, key }) => (
-            <div key={id} style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderLeft: `3px solid ${accent}`,
-              borderRadius: '12px',
-              padding: '20px 24px',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-            }}>
+        {/* § 5 MetricCard — 3 cards, glass-metric spec */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          {CARDS.map(({ id, label, accent, sparkColor, key }) => (
+            <div
+              key={id}
+              style={{
+                // § 3 glass-metric
+                background: 'rgba(255, 255, 255, 0.04)',
+                backdropFilter: 'blur(24px) saturate(170%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(170%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderLeft: `3px solid ${accent}`,
+                borderRadius: '14px',
+                boxShadow: '0 2px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06)',
+                // § 5 padding spec
+                padding: '22px 24px',
+              }}
+            >
+              {/* Label: UPPERCASE 11px #A1B5CC letter-spacing 0.12em weight-600 */}
               <p style={{
-                fontSize: '10px',
+                fontSize: '11px',
                 fontWeight: 600,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: 'rgba(161,181,204,0.7)',
-                marginBottom: '10px',
-              }}>{label}</p>
+                color: '#A1B5CC',
+                margin: '0 0 10px 0',
+              }}>
+                {label}
+              </p>
 
+              {/* Número: 56-64px weight-900 Inter white letter-spacing:-2px */}
               <p style={{
-                fontSize: '48px',
-                fontWeight: 700,
+                fontSize: '60px',
+                fontWeight: 900,
                 lineHeight: 1,
                 fontFamily: 'Inter, sans-serif',
                 color: 'white',
-                letterSpacing: '-1px',
-                marginBottom: '14px',
-              }}>{displayMetrics[key]}</p>
+                letterSpacing: '-2px',
+                margin: '0 0 14px 0',
+              }}>
+                {displayMetrics[key]}
+              </p>
 
+              {/* § 5 Sparkline — cubic bezier, area opacity 0.22, line opacity 0.55, no axes/labels/dots */}
               <svg width="100%" height="24" viewBox="0 0 180 24" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id={`sg-${id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={accent} stopOpacity="0.20"/>
-                    <stop offset="100%" stopColor={accent} stopOpacity="0"/>
+                    <stop offset="0%" stopColor={sparkColor} stopOpacity="0.22" />
+                    <stop offset="100%" stopColor={sparkColor} stopOpacity="0" />
                   </linearGradient>
                 </defs>
+                {/* Area: gradiente vertical cor→transparente, opacity 0.22 */}
+                <path d={SPARKLINE_AREA} fill={`url(#sg-${id})`} />
+                {/* Linha: strokeWidth 1.5, strokeLinecap round, opacity 0.55 */}
                 <path
-                  d="M0,20 C45,18 90,14 135,10 C158,8 170,6 180,4 L180,24 L0,24 Z"
-                  fill={`url(#sg-${id})`}
-                />
-                <path
-                  d="M0,20 C45,18 90,14 135,10 C158,8 170,6 180,4"
+                  d={SPARKLINE_PATH}
                   fill="none"
-                  stroke={accent}
+                  stroke={sparkColor}
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                  opacity="0.5"
+                  opacity="0.55"
                 />
               </svg>
             </div>
           ))}
         </div>
 
-        {/* Evolução do Pipeline */}
-        <div className="bg-[#0B192C]/50 backdrop-blur-md border border-[#1E3E62]/30 rounded-xl p-6 shadow-md relative">
-          <div className="flex items-center justify-between mb-6">
+        {/* § 5 Gráfico Pipeline — glass-metric variant, padding 24px */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.04)',
+          backdropFilter: 'blur(24px) saturate(170%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(170%)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '14px',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06)',
+          padding: '24px',
+          position: 'relative',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">Evolução do Pipeline</h2>
-              <p className="text-xs text-[#A1B5CC] mt-0.5">Leads criados por semana de prospecção</p>
+              {/* Título: 16px weight-600 white */}
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'white', margin: 0, letterSpacing: '-0.3px' }}>
+                Evolução do Pipeline
+              </h2>
+              {/* Subtítulo: 12px #A1B5CC */}
+              <p style={{ fontSize: '12px', color: '#A1B5CC', margin: '4px 0 0 0' }}>
+                Leads criados por semana de prospecção
+              </p>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-mono">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#FF6500]" />
-              <span className="text-white">Leads Criados</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: '#A1B5CC' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FF6500', display: 'inline-block' }} />
+              <span style={{ color: 'white' }}>Leads Criados</span>
             </div>
           </div>
 
           {chartLoading ? (
-            <div className="flex flex-col items-center justify-center min-h-[220px] gap-3">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '220px', gap: '12px' }}>
               <div className="ds-spinner" />
-              <p className="text-[10px] font-mono text-[#A1B5CC]/60">Carregando dados do gráfico...</p>
+              <p style={{ fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: 'rgba(161,181,204,0.6)' }}>
+                Carregando dados do gráfico...
+              </p>
             </div>
           ) : hasEnoughData ? (
-            <div className="relative w-full overflow-x-auto min-h-[220px]">
+            // § 5 — chart: mostrar SOMENTE quando chartData.length > 1
+            <div style={{ position: 'relative', width: '100%', overflowX: 'auto', minHeight: '220px' }}>
               <svg
                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                className="w-full min-w-[500px] h-auto block select-none"
+                style={{ width: '100%', minWidth: '500px', height: 'auto', display: 'block', userSelect: 'none' }}
               >
+                {/* Grid: 3 linhas horizontais rgba(30,62,98,0.20) */}
                 <g stroke="rgba(30,62,98,0.20)" strokeWidth="1">
-                  <line x1={paddingX} y1={20} x2={svgWidth - paddingX} y2={20} />
-                  <line x1={paddingX} y1={120} x2={svgWidth - paddingX} y2={120} />
-                  <line x1={paddingX} y1={220} x2={svgWidth - paddingX} y2={220} />
+                  <line x1={paddingX} y1={chartPadT}                     x2={svgWidth - paddingX} y2={chartPadT} />
+                  <line x1={paddingX} y1={chartPadT + chartH / 2}        x2={svgWidth - paddingX} y2={chartPadT + chartH / 2} />
+                  <line x1={paddingX} y1={baselineY}                     x2={svgWidth - paddingX} y2={baselineY} />
                 </g>
 
                 <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF6500" stopOpacity="0.25" />
+                  {/* Área: gradiente #FF6500 → transparente opacity 0.15 */}
+                  <linearGradient id="pipelineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF6500" stopOpacity="0.15" />
                     <stop offset="100%" stopColor="#FF6500" stopOpacity="0.00" />
                   </linearGradient>
                 </defs>
-                {areaD && <path d={areaD} fill="url(#areaGrad)" />}
+
+                {areaD && <path d={areaD} fill="url(#pipelineAreaGrad)" />}
+                {/* Linha: #FF6500 strokeWidth 2 rounded */}
                 {lineD && (
-                  <path d={lineD} fill="none" stroke="#FF6500" strokeWidth="2.5"
+                  <path d={lineD} fill="none" stroke="#FF6500" strokeWidth="2"
                     strokeLinecap="round" strokeLinejoin="round" />
                 )}
 
@@ -189,78 +240,118 @@ export function DashboardPage() {
                   const isHovered = hoveredIndex === i
                   return (
                     <g key={i}>
+                      {/* Dashed crosshair on hover */}
                       {isHovered && (
                         <line x1={p.x} y1={chartPadT} x2={p.x} y2={baselineY}
-                          stroke="#FF6500" strokeWidth="1" strokeDasharray="2 2" />
+                          stroke="rgba(255,101,0,0.35)" strokeWidth="1" strokeDasharray="3 3" />
                       )}
-                      <text x={p.x} y={svgHeight - 10} fill="#A1B5CC" fontSize="9"
-                        fontFamily="JetBrains Mono, monospace" textAnchor="middle"
-                        opacity={isHovered ? 1 : 0.6}>
+                      {/* Labels eixo X: 11px JetBrains Mono #A1B5CC opacity 0.6 */}
+                      <text
+                        x={p.x} y={svgHeight - 8}
+                        fill="#A1B5CC"
+                        fontSize="11"
+                        fontFamily="JetBrains Mono, monospace"
+                        textAnchor="middle"
+                        opacity={isHovered ? 1 : 0.6}
+                      >
                         {p.semana}
                       </text>
-                      <circle cx={p.x} cy={p.y} r={isHovered ? 6 : 4}
-                        fill={isHovered ? '#FF6500' : '#0B192C'}
-                        stroke="#FF6500" strokeWidth={isHovered ? 2.5 : 1.5}
-                        className="transition-all duration-150" />
+                      {/* Data point dot */}
+                      <circle
+                        cx={p.x} cy={p.y}
+                        r={isHovered ? 5 : 3}
+                        fill={isHovered ? '#FF6500' : 'rgba(8,12,20,0.9)'}
+                        stroke="#FF6500"
+                        strokeWidth={isHovered ? 2 : 1.5}
+                        style={{ transition: 'all 150ms ease' }}
+                      />
                     </g>
                   )
                 })}
 
+                {/* Invisible hover hit areas */}
                 {points.map((p, i) => (
-                  <rect key={i}
+                  <rect
+                    key={i}
                     x={p.x - chartWidth / (chartData.length - 1 || 1) / 2}
                     y={chartPadT}
                     width={chartWidth / (chartData.length - 1 || 1)}
                     height={chartH}
                     fill="transparent"
-                    className="cursor-pointer"
+                    style={{ cursor: 'pointer' }}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
                   />
                 ))}
               </svg>
 
+              {/* § 5 Tooltip: glass-card mini, padding 8px 12px, border rgba(255,255,255,0.10) */}
               {hoveredIndex !== null && points[hoveredIndex] && (
                 <div
-                  className="absolute pointer-events-none bg-[#0B192C] border border-[#1E3E62]/60 px-3 py-2 rounded-lg shadow-xl text-xs flex flex-col font-mono z-20 animate-in fade-in zoom-in-95 duration-150"
                   style={{
+                    position: 'absolute',
+                    pointerEvents: 'none',
+                    // glass-card mini — rgba(255,255,255,0.04) NOT rgba(11,25,44,X)
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    backdropFilter: 'blur(20px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                    border: '1px solid rgba(255, 255, 255, 0.10)',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    zIndex: 20,
                     left: `${(points[hoveredIndex].x / svgWidth) * 100}%`,
                     top: `${(points[hoveredIndex].y / svgHeight) * 100 - 15}%`,
                     transform: 'translate(-50%, -100%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '3px',
                   }}
                 >
-                  <span className="text-[#A1B5CC]/70 text-[9px] uppercase tracking-wider">
+                  <span style={{ fontSize: '9px', color: 'rgba(161,181,204,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     {points[hoveredIndex].semana}
                   </span>
-                  <span className="text-white font-bold mt-0.5">
-                    Leads: <span className="text-[#FF6500] font-bold">{points[hoveredIndex].leads_criados}</span>
+                  <span style={{ color: 'white', fontWeight: 700, fontSize: '12px' }}>
+                    Leads: <span style={{ color: '#FF6500' }}>{points[hoveredIndex].leads_criados}</span>
                   </span>
-                  <span className="text-[#A1B5CC] text-[10px] mt-0.5">
+                  <span style={{ color: '#A1B5CC', fontSize: '10px' }}>
                     Propostas: {points[hoveredIndex].propostas}
                   </span>
-                  <span className="text-[#A1B5CC] text-[10px] mt-0.5">
+                  <span style={{ color: '#A1B5CC', fontSize: '10px' }}>
                     Fechados: {points[hoveredIndex].fechados}
                   </span>
                 </div>
               )}
             </div>
           ) : (
+            // § 5 — ≤1 ponto: empty state com CTA para Pipeline (§ 8 empty state)
             <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '160px',
-              gap: '6px',
+              border: '1px dashed rgba(30,62,98,0.35)',
+              borderRadius: '14px',
+              padding: '48px 32px',
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.02)',
             }}>
-              <p style={{ color: 'rgba(161,181,204,0.40)', fontSize: '13px', textAlign: 'center' }}>
-                Crie mais leads para ver a evolução semanal
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ margin: '0 auto 12px' }}>
+                <path d="M4 24 L10 16 L16 18 L22 10 L28 8" stroke="rgba(30,62,98,0.50)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <circle cx="28" cy="8" r="2" fill="rgba(30,62,98,0.50)" />
+              </svg>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 600, margin: '0 0 6px 0', fontSize: '14px' }}>
+                Sem dados suficientes
+              </p>
+              <p style={{ color: '#A1B5CC', fontSize: '13px', margin: '0 0 16px 0' }}>
+                Crie mais leads para ver a evolução semanal do pipeline.
               </p>
               <a href="/pipeline" style={{
                 color: '#FF6500',
                 fontSize: '13px',
                 fontWeight: 500,
                 textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}>
                 Ir para o Pipeline →
               </a>
