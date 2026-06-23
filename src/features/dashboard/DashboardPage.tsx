@@ -1,14 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { AppNav } from '@/components/layout/AppNav'
 import { GlassCard } from '@/components/ui/GlassCard'
-import {
-  TrendingUp,
-  Send,
-  CheckCircle2,
-  Sparkles
-} from 'lucide-react'
+import { Target } from 'lucide-react'
+
 
 // Dados mockados para o gráfico SVG de conversão
 const MOCK_GRAPH_DATA = [
@@ -92,67 +89,65 @@ export function DashboardPage() {
         <>
           {/* 3 Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Leads Ativos */}
-              <GlassCard variant="metric" accentColor="#1E3E62" className="p-6 group relative">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1E3E62] group-hover:bg-[#FF6500] transition-colors" />
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold tracking-wider text-[#A1B5CC] uppercase">Leads Ativos</p>
-                    <p className="text-4xl font-bold font-mono text-white mt-3 tracking-tight">
-                      {displayMetrics.total_leads}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-[#1E3E62]/20 rounded-lg text-[#A1B5CC] group-hover:text-white transition-colors">
-                    <TrendingUp size={20} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 mt-4 text-[10px] font-mono text-[#A1B5CC]/60">
-                  <Sparkles size={12} className="text-[#FF6500]" />
-                  <span>Em progresso no funil de vendas</span>
-                </div>
-              </GlassCard>
-
-              {/* Card 2: Propostas Enviadas */}
-              <GlassCard variant="metric" accentColor="#1E3E62" className="p-6 group relative">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1E3E62] group-hover:bg-[#FF6500] transition-colors" />
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold tracking-wider text-[#A1B5CC] uppercase">Propostas Enviadas</p>
-                    <p className="text-4xl font-bold font-mono text-white mt-3 tracking-tight">
-                      {displayMetrics.total_propostas}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-[#1E3E62]/20 rounded-lg text-[#A1B5CC] group-hover:text-white transition-colors">
-                    <Send size={20} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 mt-4 text-[10px] font-mono text-[#A1B5CC]/60">
-                  <span>Aguardando retorno comercial</span>
-                </div>
-              </GlassCard>
-
-              {/* Card 3: Fechados no Mês */}
-              <GlassCard variant="metric" accentColor="#FF6500" className="p-6 group relative">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#FF6500]" />
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold tracking-wider text-[#A1B5CC] uppercase">Fechados no Mês</p>
-                    <p className="text-4xl font-bold font-mono text-white mt-3 tracking-tight">
-                      {displayMetrics.fechados_mes}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-[#FF6500]/10 rounded-lg text-[#FF6500]">
-                    <CheckCircle2 size={20} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 mt-4 text-[10px] font-mono text-[#A1B5CC]/60">
-                  <span className="text-emerald-400 font-semibold">{displayMetrics.taxa_conversao.toFixed(1)}% de conversão</span>
-                  <span>geral no mês</span>
-                </div>
-              </GlassCard>
+            {/* Card 1: Leads Ativos */}
+            <div className="p-6 border border-[#1E3E62]/30 border-l-[3px] border-l-[#1E3E62] bg-[#0B192C] rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]">
+              <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Leads Ativos</p>
+              <p className="text-6xl font-black text-white mt-4 font-sans tracking-tight">
+                {displayMetrics.total_leads}
+              </p>
+              <div className="mt-4 flex justify-center w-full">
+                <svg width="80" height="20" viewBox="0 0 80 20" fill="none" className="opacity-80">
+                  <path d="M0,15 L20,8 L40,12 L60,4 L80,10" stroke="#1E3E62" strokeOpacity="0.4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </div>
 
-            {/* SVG Area Chart Container */}
+            {/* Card 2: Propostas Enviadas */}
+            <div className="p-6 border border-[#1E3E62]/30 border-l-[3px] border-l-[#FF6500]/40 bg-[#0B192C] rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]">
+              <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Propostas Enviadas</p>
+              <p className="text-6xl font-black text-white mt-4 font-sans tracking-tight">
+                {displayMetrics.total_propostas}
+              </p>
+              {/* Progress bar container */}
+              <div className="w-full max-w-[160px] mt-5">
+                <div className="w-full h-1.5 bg-[#1E3E62]/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#FF6500] rounded-full transition-all duration-500"
+                    style={{ width: `${displayMetrics.total_leads > 0 ? Math.min((displayMetrics.total_propostas / displayMetrics.total_leads) * 100, 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Fechados no Mês */}
+            <div 
+              className="p-6 border border-[#1E3E62]/30 border-l-[3px] border-l-[#FF6500] rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]"
+              style={{ background: 'linear-gradient(to bottom right, #0B192C, #0d1f33)' }}
+            >
+              <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Fechados no Mês</p>
+              <p className="text-6xl font-black text-[#FF6500] mt-4 font-sans tracking-tight">
+                {displayMetrics.fechados_mes}
+              </p>
+              <div className="mt-4 flex items-center justify-center">
+                <span className="bg-[#FF6500]/10 text-[#FF6500] text-xs px-2.5 py-0.5 rounded-full font-mono font-medium border border-[#FF6500]/20">
+                  {displayMetrics.taxa_conversao.toFixed(1)}% conversão
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Condition for Empty State or Chart */}
+          {displayMetrics.total_leads === 0 ? (
+            <div className="border border-dashed border-[#1E3E62]/30 rounded-xl p-8 text-center flex flex-col items-center justify-center min-h-[220px]">
+              <Target className="text-[#1E3E62]/40" size={32} />
+              <h3 className="text-white/60 font-medium mt-3">Seu funil está vazio</h3>
+              <p className="text-[#A1B5CC] text-sm mt-1">Crie seu primeiro lead no Pipeline para ver as métricas.</p>
+              <Link to="/pipeline" className="mt-4 inline-flex items-center gap-1 text-[#FF6500] hover:text-[#FF6500]/80 text-sm font-medium transition-colors">
+                Ir para o Pipeline &rarr;
+              </Link>
+            </div>
+          ) : (
+            /* SVG Area Chart Container */
             <div className="bg-[#0B192C] border border-[#1E3E62]/30 rounded-xl p-6 shadow-md relative">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -287,6 +282,7 @@ export function DashboardPage() {
                 )}
               </div>
             </div>
+          )}
         </>
       </main>
     </div>
