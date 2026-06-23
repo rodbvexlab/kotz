@@ -74,7 +74,7 @@ export function LoginPage() {
       `}</style>
 
       {/* ─── LEFT: Login Form ──────────────────────────────────────────── */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 z-10 relative">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 z-10 relative bg-transparent">
         <div className="w-full max-w-md">
 
           {/* Logo */}
@@ -82,29 +82,24 @@ export function LoginPage() {
             <span className="text-4xl font-extrabold tracking-tight">
               <span className="text-white">Ko</span>
               <span
-                className="text-[#FF6500]"
-                style={{ filter: 'drop-shadow(0 0 8px rgba(255,101,0,0.35))' }}
+                className="text-[#FF6500] drop-shadow-[0_0_8px_rgba(255,101,0,0.35)]"
               >
                 tz
               </span>
             </span>
-            <p className="text-[#A1B5CC] text-xs mt-1.5 tracking-widest uppercase font-mono">CRM</p>
+            <p className="text-white/60 text-xs mt-1.5 tracking-[0.3em] uppercase font-mono">CRM</p>
           </div>
 
           {/* Glass Card */}
           <div
-            className="p-8 space-y-6 rounded-2xl"
+            className="p-8 space-y-6 rounded-2xl bg-white/[0.04] backdrop-blur-[24px] saturate-[170%] border border-white/[0.08]"
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              backdropFilter: 'blur(24px) saturate(170%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(170%)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
               boxShadow: '0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
             }}
           >
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">Entrar na sua conta</h1>
-              <p className="text-xs mt-1" style={{ color: 'rgba(161,181,204,0.7)' }}>
+              <p className="text-xs text-white/50 mt-1">
                 Insira seus dados de acesso abaixo.
               </p>
             </div>
@@ -113,21 +108,7 @@ export function LoginPage() {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 font-semibold rounded-xl py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-              style={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.10)',
-                color: '#fff',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.10)'
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.10)'
-              }}
+              className="w-full flex items-center justify-center gap-3 font-semibold rounded-xl py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 cursor-pointer bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/15"
             >
               <GoogleIcon />
               Continuar com Google
@@ -135,17 +116,17 @@ export function LoginPage() {
 
             {/* Divider */}
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px" style={{ background: 'rgba(30,62,98,0.30)' }} />
-              <span className="text-xs font-medium" style={{ color: 'rgba(161,181,204,0.5)' }}>
+              <div className="flex-1 h-px bg-[#1E3E62]/30" />
+              <span className="text-xs font-medium text-white/40">
                 ou use e-mail
               </span>
-              <div className="flex-1 h-px" style={{ background: 'rgba(30,62,98,0.30)' }} />
+              <div className="flex-1 h-px bg-[#1E3E62]/30" />
             </div>
 
             {/* Email + Password inputs */}
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#A1B5CC' }}>
+                <label className="block text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">
                   E-mail
                 </label>
                 <input
@@ -153,19 +134,12 @@ export function LoginPage() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full rounded-xl px-4 py-2.5 text-white text-sm outline-none transition-all duration-200 focus:border-[#FF6500]/60 focus:ring-1 focus:ring-[#FF6500]/25"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    backdropFilter: 'blur(24px)',
-                    WebkitBackdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(255, 255, 255, 0.09)',
-                    color: '#fff',
-                  }}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all duration-200 bg-white/5 border border-white/10 text-white placeholder-white/40 focus:bg-white/10 focus:border-[#FF6500]/50 focus:ring-1 focus:ring-[#FF6500]/50"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#A1B5CC' }}>
+                <label className="block text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">
                   Senha
                 </label>
                 <div className="relative">
@@ -175,22 +149,12 @@ export function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleEmailLogin()}
-                    className="w-full rounded-xl pl-4 pr-10 py-2.5 text-white text-sm outline-none transition-all duration-200 focus:border-[#FF6500]/60 focus:ring-1 focus:ring-[#FF6500]/25"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      backdropFilter: 'blur(24px)',
-                      WebkitBackdropFilter: 'blur(24px)',
-                      border: '1px solid rgba(255, 255, 255, 0.09)',
-                      color: '#fff',
-                    }}
+                    className="w-full rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-all duration-200 bg-white/5 border border-white/10 text-white placeholder-white/40 focus:bg-white/10 focus:border-[#FF6500]/50 focus:ring-1 focus:ring-[#FF6500]/50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-pointer"
-                    style={{ color: '#A1B5CC' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#A1B5CC')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1B5CC] hover:text-white transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -199,14 +163,7 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <p
-                className="text-xs rounded-lg px-3 py-2.5 font-mono"
-                style={{
-                  color: 'rgba(255,101,0,0.9)',
-                  background: 'rgba(255,101,0,0.08)',
-                  border: '1px solid rgba(255,101,0,0.15)',
-                }}
-              >
+              <p className="text-xs rounded-lg px-3 py-2.5 font-mono text-[#FF6500]/90 bg-[#FF6500]/[0.08] border border-[#FF6500]/15">
                 {error}
               </p>
             )}
@@ -222,20 +179,7 @@ export function LoginPage() {
               <button
                 onClick={handleEmailSignUp}
                 disabled={loading || !email || !password}
-                className="flex-1 font-semibold rounded-lg py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: '#fff',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
-                  e.currentTarget.style.borderColor = 'rgba(255,101,0,0.25)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
-                }}
+                className="flex-1 font-semibold rounded-lg py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer bg-white/[0.04] border border-white/[0.08] text-white hover:bg-white/[0.08] hover:border-[#FF6500]/25"
               >
                 Criar conta
               </button>
