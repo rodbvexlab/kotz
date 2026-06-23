@@ -25,7 +25,11 @@ export function useLeadInteractions(leadId: string | null) {
   }, [leadId, tenant])
 
   const addInteraction = useCallback(async (note: string) => {
-    if (!leadId || !tenant) return
+    console.log('[useLeadInteractions] inserindo:', { leadId, tenantId: tenant?.id, note })
+    if (!leadId || !tenant) {
+      console.warn('[useLeadInteractions] abortado — leadId ou tenant nulo', { leadId, tenant })
+      return
+    }
     const { data: { user } } = await supabase.auth.getUser()
     const optimistic: LeadInteraction = {
       id: `temp_${Date.now()}`,
@@ -47,10 +51,12 @@ export function useLeadInteractions(leadId: string | null) {
       .select()
       .single()
     if (error) {
+      console.error('[useLeadInteractions] erro no insert:', error)
       setInteractions(prev => prev.filter(i => i.id !== optimistic.id))
       return
     }
     if (data) {
+      console.log('[useLeadInteractions] insert OK:', data)
       setInteractions(prev =>
         prev.map(i => i.id === optimistic.id
           ? data as LeadInteraction : i)
