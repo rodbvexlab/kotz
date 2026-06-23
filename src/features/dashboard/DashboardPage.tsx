@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
+import { useChartData } from './hooks/useChartData'
 import { AppNav } from '@/components/layout/AppNav'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Target } from 'lucide-react'
@@ -20,6 +21,7 @@ const MOCK_GRAPH_DATA = [
 export function DashboardPage() {
   const { tenant } = useTenant()
   const { metrics, loading } = useDashboardMetrics()
+  const { data: chartData, loading: chartLoading } = useChartData()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
@@ -32,8 +34,6 @@ export function DashboardPage() {
     taxa_conversao: 0,
   }
 
-  const maxRate = Math.max(...MOCK_GRAPH_DATA.map(d => d.rate), 30)
-
   // Configurações do SVG
   const svgWidth = 600
   const svgHeight = 220
@@ -42,10 +42,13 @@ export function DashboardPage() {
   const chartWidth = svgWidth - paddingX * 2
   const chartHeight = svgHeight - paddingY * 2
 
+  const maxLeads = chartData.length > 0 ? Math.max(...chartData.map(d => d.leads_criados), 5) : 5
+
   // Gera pontos do gráfico
-  const points = MOCK_GRAPH_DATA.map((d, i) => {
-    const x = paddingX + (i / (MOCK_GRAPH_DATA.length - 1)) * chartWidth
-    const y = svgHeight - paddingY - (d.rate / maxRate) * chartHeight
+  const points = chartData.map((d, i) => {
+    const divisor = chartData.length > 1 ? chartData.length - 1 : 1
+    const x = paddingX + (i / divisor) * chartWidth
+    const y = svgHeight - paddingY - (d.leads_criados / maxLeads) * chartHeight
     return { x, y, ...d }
   })
 
@@ -167,170 +170,151 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {/* Condition for Empty State or Chart */}
-          {displayMetrics.total_leads === 0 ? (
-            <div style={{
-              background: 'rgba(11,25,44,0.3)',
-              backdropFilter: 'blur(12px)',
-              border: '1px dashed rgba(30,62,98,0.4)',
-              borderRadius: '16px',
-              padding: '48px',
-              textAlign: 'center'
-            }}>
-              <div style={{color: 'rgba(30,62,98,0.5)', marginBottom: '12px'}}>
-                <Target size={36} className="mx-auto" />
-              </div>
-              <p style={{color: 'rgba(255,255,255,0.5)', fontWeight: 600}}>
-                Seu funil está vazio
-              </p>
-              <p style={{color: '#A1B5CC', fontSize: '14px', marginTop: '6px'}}>
-                Crie seu primeiro lead no Pipeline para ver as métricas evoluírem.
-              </p>
-              <Link to="/pipeline" style={{
-                color: '#FF6500', fontSize: '14px', fontWeight: 500,
-                display: 'inline-flex', alignItems: 'center', gap: '4px',
-                marginTop: '16px'
-              }}>
-                Ir para o Pipeline →
-              </Link>
-            </div>
-          ) : (
-            /* SVG Area Chart Container */
+            {/* SVG Area Chart Container */}
             <div className="bg-[#0B192C] border border-[#1E3E62]/30 rounded-xl p-6 shadow-md relative">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-white tracking-tight">Evolução do Pipeline</h2>
-                  <p className="text-xs text-[#A1B5CC] mt-0.5">Taxa de conversão por semana de prospecção</p>
+                  <p className="text-xs text-[#A1B5CC] mt-0.5">Leads criados por semana de prospecção</p>
                 </div>
                 <div className="flex items-center gap-4 text-xs font-mono">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FF6500]" />
-                    <span className="text-white">% Taxa</span>
+                    <span className="text-white">Leads Criados</span>
                   </div>
                 </div>
               </div>
 
-              {/* SVG Area Chart wrapper */}
-              <div className="relative w-full overflow-x-auto min-h-[220px]">
-                <svg
-                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                  className="w-full min-w-[500px] h-auto block select-none"
-                >
-                  {/* Grids and Axes */}
-                  <g stroke="#1E3E62" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3">
-                    {Array.from({ length: 4 }).map((_, i) => {
-                      const yVal = paddingY + (i / 3) * chartHeight
-                      return <line key={i} x1={paddingX} y1={yVal} x2={svgWidth - paddingX} y2={yVal} />
-                    })}
-                  </g>
-
-                  {/* Area path with gradient */}
-                  <defs>
-                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF6500" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#FF6500" stopOpacity="0.00" />
-                    </linearGradient>
-                  </defs>
-                  {areaD && <path d={areaD} fill="url(#areaGrad)" />}
-
-                  {/* Line path */}
-                  {lineD && (
-                    <path
-                      d={lineD}
-                      fill="none"
-                      stroke="#FF6500"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-
-                  {/* Grid vertical hover lines & dots */}
-                  {points.map((p, i) => {
-                    const isHovered = hoveredIndex === i
-                    return (
-                      <g key={i}>
-                        {/* Vertical hover guide line */}
-                        {isHovered && (
-                          <line
-                            x1={p.x}
-                            y1={paddingY}
-                            x2={p.x}
-                            y2={svgHeight - paddingY}
-                            stroke="#FF6500"
-                            strokeWidth="1"
-                            strokeDasharray="2 2"
-                          />
-                        )}
-
-                        {/* Axis Labels (Period) */}
-                        <text
-                          x={p.x}
-                          y={svgHeight - 10}
-                          fill="#A1B5CC"
-                          fontSize="9"
-                          fontFamily="JetBrains Mono, monospace"
-                          textAnchor="middle"
-                          opacity={isHovered ? 1 : 0.6}
-                          className="transition-opacity"
-                        >
-                          {p.period}
-                        </text>
-
-                        {/* Y Axis rates on the line dots */}
-                        <circle
-                          cx={p.x}
-                          cy={p.y}
-                          r={isHovered ? 6 : 4}
-                          fill={isHovered ? '#FF6500' : '#0B192C'}
-                          stroke="#FF6500"
-                          strokeWidth={isHovered ? 2.5 : 1.5}
-                          className="transition-all duration-150"
-                        />
-                      </g>
-                    )
-                  })}
-
-                  {/* Mouse capture columns */}
-                  {points.map((p, i) => (
-                    <rect
-                      key={i}
-                      x={p.x - chartWidth / (MOCK_GRAPH_DATA.length - 1) / 2}
-                      y={paddingY}
-                      width={chartWidth / (MOCK_GRAPH_DATA.length - 1)}
-                      height={chartHeight}
-                      fill="transparent"
-                      className="cursor-pointer"
-                      onMouseEnter={() => setHoveredIndex(i)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                    />
-                  ))}
-                </svg>
-
-                {/* Custom Tooltip */}
-                {hoveredIndex !== null && (
-                  <div
-                    className="absolute pointer-events-none bg-[#0B192C] border border-[#1E3E62]/60 px-3 py-2 rounded-lg shadow-xl text-xs flex flex-col font-mono z-20 animate-in fade-in zoom-in-95 duration-150"
-                    style={{
-                      left: `${(points[hoveredIndex].x / svgWidth) * 100}%`,
-                      top: `${(points[hoveredIndex].y / svgHeight) * 100 - 15}%`,
-                      transform: 'translate(-50%, -100%)',
-                    }}
+              {chartLoading ? (
+                <div className="flex flex-col items-center justify-center min-h-[220px] gap-3">
+                  <div className="ds-spinner" />
+                  <p className="text-[10px] font-mono text-[#A1B5CC]/60">Carregando dados do gráfico...</p>
+                </div>
+              ) : (
+                /* SVG Area Chart wrapper */
+                <div className="relative w-full overflow-x-auto min-h-[220px]">
+                  <svg
+                    viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                    className="w-full min-w-[500px] h-auto block select-none"
                   >
-                    <span className="text-[#A1B5CC]/70 text-[9px] uppercase tracking-wider">
-                      {points[hoveredIndex].period}
-                    </span>
-                    <span className="text-white font-bold mt-0.5">
-                      Taxa: <span className="text-[#FF6500] font-bold">{points[hoveredIndex].rate}%</span>
-                    </span>
-                    <span className="text-[#A1B5CC] text-[10px] mt-0.5">
-                      Volume: {points[hoveredIndex].leads} leads
-                    </span>
-                  </div>
-                )}
-              </div>
+                    {/* Grids and Axes */}
+                    <g stroke="#1E3E62" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3">
+                      {Array.from({ length: 4 }).map((_, i) => {
+                        const yVal = paddingY + (i / 3) * chartHeight
+                        return <line key={i} x1={paddingX} y1={yVal} x2={svgWidth - paddingX} y2={yVal} />
+                      })}
+                    </g>
+
+                    {/* Area path with gradient */}
+                    <defs>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF6500" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#FF6500" stopOpacity="0.00" />
+                      </linearGradient>
+                    </defs>
+                    {areaD && <path d={areaD} fill="url(#areaGrad)" />}
+
+                    {/* Line path */}
+                    {lineD && (
+                      <path
+                        d={lineD}
+                        fill="none"
+                        stroke="#FF6500"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    )}
+
+                    {/* Grid vertical hover lines & dots */}
+                    {points.map((p, i) => {
+                      const isHovered = hoveredIndex === i
+                      return (
+                        <g key={i}>
+                          {/* Vertical hover guide line */}
+                          {isHovered && (
+                            <line
+                              x1={p.x}
+                              y1={paddingY}
+                              x2={p.x}
+                              y2={svgHeight - paddingY}
+                              stroke="#FF6500"
+                              strokeWidth="1"
+                              strokeDasharray="2 2"
+                            />
+                          )}
+
+                          {/* Axis Labels (Period) */}
+                          <text
+                            x={p.x}
+                            y={svgHeight - 10}
+                            fill="#A1B5CC"
+                            fontSize="9"
+                            fontFamily="JetBrains Mono, monospace"
+                            textAnchor="middle"
+                            opacity={isHovered ? 1 : 0.6}
+                            className="transition-opacity"
+                          >
+                            {p.semana}
+                          </text>
+
+                          {/* Y Axis rates on the line dots */}
+                          <circle
+                            cx={p.x}
+                            cy={p.y}
+                            r={isHovered ? 6 : 4}
+                            fill={isHovered ? '#FF6500' : '#0B192C'}
+                            stroke="#FF6500"
+                            strokeWidth={isHovered ? 2.5 : 1.5}
+                            className="transition-all duration-150"
+                          />
+                        </g>
+                      )
+                    })}
+
+                    {/* Mouse capture columns */}
+                    {points.map((p, i) => (
+                      <rect
+                        key={i}
+                        x={p.x - chartWidth / (chartData.length - 1 || 1) / 2}
+                        y={paddingY}
+                        width={chartWidth / (chartData.length - 1 || 1)}
+                        height={chartHeight}
+                        fill="transparent"
+                        className="cursor-pointer"
+                        onMouseEnter={() => setHoveredIndex(i)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                      />
+                    ))}
+                  </svg>
+
+                  {/* Custom Tooltip */}
+                  {hoveredIndex !== null && points[hoveredIndex] && (
+                    <div
+                      className="absolute pointer-events-none bg-[#0B192C] border border-[#1E3E62]/60 px-3 py-2 rounded-lg shadow-xl text-xs flex flex-col font-mono z-20 animate-in fade-in zoom-in-95 duration-150"
+                      style={{
+                        left: `${(points[hoveredIndex].x / svgWidth) * 100}%`,
+                        top: `${(points[hoveredIndex].y / svgHeight) * 100 - 15}%`,
+                        transform: 'translate(-50%, -100%)',
+                      }}
+                    >
+                      <span className="text-[#A1B5CC]/70 text-[9px] uppercase tracking-wider">
+                        {points[hoveredIndex].semana}
+                      </span>
+                      <span className="text-white font-bold mt-0.5">
+                        Leads: <span className="text-[#FF6500] font-bold">{points[hoveredIndex].leads_criados}</span>
+                      </span>
+                      <span className="text-[#A1B5CC] text-[10px] mt-0.5">
+                        Propostas: {points[hoveredIndex].propostas}
+                      </span>
+                      <span className="text-[#A1B5CC] text-[10px] mt-0.5">
+                        Fechados: {points[hoveredIndex].fechados}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
         </>
       </main>
     </div>

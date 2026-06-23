@@ -128,7 +128,17 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      get_pipeline_chart_data: {
+        Args: { p_tenant_id: string }
+        Returns: Array<{
+          semana: string
+          leads_criados: number
+          propostas: number
+          fechados: number
+        }>
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }
