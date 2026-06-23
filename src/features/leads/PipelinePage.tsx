@@ -6,12 +6,21 @@ import { LeadPanel } from './components/LeadPanel'
 import { useLeadsSync } from './hooks/useLeadsSync'
 import { useLeadInteractions } from './hooks/useLeadInteractions'
 import { AppNav } from '@/components/layout/AppNav'
-import type { Lead } from '@/types/pipeline'
+import type { Lead, LeadStatus } from '@/types/pipeline'
 
 export function PipelinePage() {
   const { state, loading, error, handleMove, handleAddLead, handleUpdateLead } = useLeadsSync()
   const [activeLead, setActiveLead] = useState<Lead | null>(null)
+  const [isNewLead, setIsNewLead] = useState(false)
   const [searchParams] = useSearchParams()
+
+  const handleCreateLead = async (name: string, status: LeadStatus) => {
+    const created = await handleAddLead(name, status)
+    if (created) {
+      setIsNewLead(true)
+      setActiveLead(created)
+    }
+  }
 
   // Hook real de interações — conectado ao Supabase
   const {
@@ -80,15 +89,22 @@ export function PipelinePage() {
         <KanbanBoard
           state={state}
           onMove={handleMove}
-          onOpenLead={setActiveLead}
-          onAddLead={handleAddLead}
+          onOpenLead={(lead) => {
+            setIsNewLead(false)
+            setActiveLead(lead)
+          }}
+          onAddLead={handleCreateLead}
         />
       </div>
 
       {/* Slide-over */}
       <LeadPanel
         lead={activeLead}
-        onClose={() => setActiveLead(null)}
+        onClose={() => {
+          setActiveLead(null)
+          setIsNewLead(false)
+        }}
+        isNewLead={isNewLead}
         interactions={interactions}
         loadingInteractions={loadingInteractions}
         onAddInteraction={onAddInteraction}

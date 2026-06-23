@@ -20,6 +20,7 @@ export interface LeadPanelProps {
   loadingInteractions: boolean
   onAddInteraction: (note: string) => Promise<void>
   onUpdateLead: (updated: Lead) => void
+  isNewLead?: boolean
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -95,15 +96,23 @@ function formatInteractionDate(iso: string) {
 
 /** Input padronizado com estilo dark-luxury do design system §5 */
 function DSInput({
-  label, value, onChange, placeholder, required,
+  label, value, onChange, placeholder, required, autoFocus,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   placeholder?: string
   required?: boolean
+  autoFocus?: boolean
 }) {
   const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    if (autoFocus) {
+      setFocused(true)
+    }
+  }, [autoFocus])
+
   return (
     <div className="flex flex-col gap-1.5">
       <label
@@ -124,6 +133,7 @@ function DSInput({
         placeholder={placeholder}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        autoFocus={autoFocus}
         style={{
           width: '100%',
           fontSize: '13px',
@@ -384,6 +394,7 @@ export function LeadPanel({
   loadingInteractions,
   onAddInteraction,
   onUpdateLead,
+  isNewLead,
 }: LeadPanelProps) {
   const [, setSearchParams] = useSearchParams()
   const open = !!lead
@@ -416,9 +427,9 @@ export function LeadPanel({
   useEffect(() => {
     if (lead) {
       setForm(toForm(lead))
-      setMode('view')
+      setMode(isNewLead ? 'edit' : 'view')
     }
-  }, [lead?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lead?.id, isNewLead]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fecha com Escape (Esc no edit mode cancela; segundo Esc fecha)
   useEffect(() => {
@@ -649,6 +660,7 @@ export function LeadPanel({
                     value={form.service ?? ''}
                     onChange={v => setForm(f => ({ ...f, service: v || null }))}
                     placeholder="Ex: Social Media, Branding…"
+                    autoFocus={isNewLead}
                   />
 
                   {/* Contact */}

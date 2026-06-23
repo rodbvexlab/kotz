@@ -56,8 +56,8 @@ export function useLeadsSync() {
 
   // ─── 3. Cria lead inline com tenant_id real ───────────────────────────────
   const handleAddLead = useCallback(
-    async (name: string, status: LeadStatus) => {
-      if (!tenant) return
+    async (name: string, status: LeadStatus): Promise<Lead | null> => {
+      if (!tenant) return null
 
       // ID temporário para optimistic UI imediato
       const tempId = `temp_${Date.now()}`
@@ -100,13 +100,16 @@ export function useLeadsSync() {
           .order('created_at', { ascending: false })
 
         if (fresh) init(fresh as Lead[])
-        return
+        return null
       }
 
       // Substitui o lead temporário pelo real (com UUID do banco)
       if (data) {
-        updateLead({ ...optimistic, id: data.id })
+        const realLead = { ...optimistic, id: data.id }
+        updateLead(realLead)
+        return realLead
       }
+      return null
     },
     [tenant, addLead, updateLead, init]
   )
