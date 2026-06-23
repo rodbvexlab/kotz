@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Instagram, MessageCircle, Users } from 'lucide-react'
@@ -9,64 +10,79 @@ interface LeadCardProps {
   onOpen: (lead: Lead) => void
 }
 
-const CHANNEL_ICON = {
-  instagram:  <Instagram size={14} />,
-  whatsapp:   <MessageCircle size={14} />,
-  indicacao:  <Users size={14} />,
-  outro:      null,
-}
-
-const CHANNEL_LABEL = {
-  instagram: 'Instagram',
-  whatsapp:  'WhatsApp',
-  indicacao: 'Indicação',
-  outro:     'Outro',
-}
-
 const STATUS_COLOR: Record<string, string> = {
   novo:             '#1E3E62',
   em_contato:       '#FF6500',
   proposta_enviada: '#F59E0B',
   fechado:          '#22C55E',
-  perdido:          '#6B7280',
+  perdido:          '#52525B',
 }
 
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 0) return ''
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-}
-
-function getAvatarBg(name: string) {
-  const colors = ['#FF6500', '#1E3E62', '#2a4a7f', '#7c3aed']
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+const channelIcon = (channel?: string | null) => {
+  if (!channel) return null
+  switch (channel) {
+    case 'instagram':
+      return <Instagram size={13} style={{ color: '#A1B5CC' }} />
+    case 'whatsapp':
+      return <MessageCircle size={13} style={{ color: '#A1B5CC' }} />
+    case 'indicacao':
+      return <Users size={13} style={{ color: '#A1B5CC' }} />
+    default:
+      return null
   }
-  const index = Math.abs(hash) % colors.length
-  return colors[index]
 }
 
-function timeAgo(dateString: string) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 0) {
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    if (diffHours === 0) {
-      const diffMins = Math.floor(diffMs / (1000 * 60))
-      return diffMins <= 1 ? 'agora' : `há ${diffMins}m`
-    }
-    return `há ${diffHours}h`
+const channelBadgeStyle = (channel?: string | null): React.CSSProperties => {
+  const styles: Record<string, React.CSSProperties> = {
+    instagram: { background: 'rgba(244,114,182,0.10)', color: '#F472B6' },
+    whatsapp:  { background: 'rgba(74,222,128,0.10)',  color: '#4ADE80' },
+    indicacao: { background: 'rgba(96,165,250,0.10)',  color: '#60A5FA' },
+    outro:     { background: 'rgba(30,62,98,0.20)',    color: '#A1B5CC' },
   }
-  if (diffDays === 1) return 'ontem'
-  return `há ${diffDays}d`
+  const base: React.CSSProperties = {
+    fontSize: '10px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    padding: '2px 8px',
+    borderRadius: '9999px',
+  }
+  return { ...base, ...(channel ? styles[channel] : styles.outro) }
+}
+
+const channelLabel = (channel?: string | null): string => {
+  const labels: Record<string, string> = {
+    instagram: 'Instagram',
+    whatsapp:  'WhatsApp',
+    indicacao: 'Indicação',
+    outro:     'Outro',
+  }
+  return channel ? labels[channel] : labels.outro
+}
+
+function initials(name: string): string {
+  return name.split(' ').slice(0,2).map(w => w[0]?.toUpperCase()).join('')
+}
+
+function avatarColor(name: string): string {
+  const palette = ['#1E3E62','#2a4a7f','#FF6500','#7c3aed','#0891b2']
+  return palette[name.charCodeAt(0) % palette.length]
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff/60000)
+  if (m < 1) return 'agora'
+  if (m < 60) return `há ${m}min`
+  const h = Math.floor(m/60)
+  if (h < 24) return `há ${h}h`
+  const d = Math.floor(h/24)
+  return `há ${d}d`
 }
 
 export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
+  const [isHovered, setIsHovered] = useState(false)
+  
   const {
     attributes,
     listeners,
@@ -76,10 +92,22 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
     isDragging,
   } = useSortable({ id: lead.id })
 
-  const style = {
+  const statusColor = STATUS_COLOR[lead.status] || '#1E3E62'
+
+  const style: React.CSSProperties = {
+    background: 'rgba(11, 25, 44, 0.40)',
+    backdropFilter: 'blur(20px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+    border: isHovered ? '1px solid rgba(255,101,0,0.25)' : '1px solid rgba(255,255,255,0.09)',
+    borderLeft: `3px solid ${statusColor}`,
+    borderRadius: '12px',
+    boxShadow: isHovered 
+      ? '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(255,101,0,0.08)'
+      : '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+    padding: '14px',
+    cursor: isDragging ? 'grabbing' : 'grab',
     transform: CSS.Transform.toString(transform),
     transition,
-    borderLeft: `2px solid ${STATUS_COLOR[lead.status]}`,
   }
 
   return (
@@ -89,11 +117,11 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
       {...attributes}
       {...listeners}
       className={[
-        'group relative p-4 cursor-grab active:cursor-grabbing select-none',
-        'glass-card',
         isDragging ? 'drag-active' : '',
         isDrop ? 'opacity-60' : '',
-      ].join(' ')}
+      ].filter(Boolean).join(' ')}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
         if (!isDragging) {
           e.stopPropagation()
@@ -101,46 +129,60 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
         }
       }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          {/* Avatar */}
-          <div 
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 border border-white/15"
-            style={{ backgroundColor: getAvatarBg(lead.name) }}
-          >
-            {getInitials(lead.name)}
-          </div>
-          {/* Nome */}
-          <span className="text-sm font-semibold text-white truncate leading-tight">
-            {lead.name}
-          </span>
+      {/* LINHA 1 — Avatar + Nome + Ícone canal */}
+      <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+        {/* Avatar com iniciais */}
+        <div style={{
+          width: '30px', height: '30px', borderRadius: '50%',
+          background: avatarColor(lead.name),
+          border: '1px solid rgba(255,255,255,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '10px', fontWeight: 700, color: 'white',
+          flexShrink: 0,
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          {initials(lead.name)}
         </div>
-        {/* Icon canal */}
-        {lead.channel && (
-          <span className="text-[#A1B5CC]/70 shrink-0">
-            {CHANNEL_ICON[lead.channel]}
-          </span>
-        )}
+
+        {/* Nome */}
+        <span style={{
+          fontSize: '14px', fontWeight: 600, color: 'white',
+          flex: 1, overflow: 'hidden', textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {lead.name}
+        </span>
+
+        {/* Canal icon */}
+        {channelIcon(lead.channel)}
       </div>
 
-      {/* Serviço de interesse */}
+      {/* LINHA 2 — Serviço */}
       {lead.service && (
-        <p className="text-xs text-[#A1B5CC] mt-2 truncate pl-9">
+        <p style={{
+          fontSize: '12px', color: '#A1B5CC',
+          marginTop: '8px',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+        }}>
           {lead.service}
         </p>
       )}
 
-      {/* Footer: badge canal + time ago */}
-      <div className="flex items-center justify-between mt-3 pl-9">
-        {lead.channel ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#A1B5CC] bg-[#1E3E62]/10 border border-[#1E3E62]/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-            {CHANNEL_LABEL[lead.channel]}
-          </span>
-        ) : (
-          <span />
-        )}
-        <span className="text-[10px] font-mono text-[#A1B5CC]/60">
+      {/* LINHA 3 — Footer */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginTop: '12px'
+      }}>
+        {/* Badge canal */}
+        <span style={channelBadgeStyle(lead.channel)}>
+          {channelLabel(lead.channel)}
+        </span>
+
+        {/* Time ago */}
+        <span style={{
+          fontSize: '10px', color: 'rgba(30,62,98,0.8)',
+          fontFamily: 'JetBrains Mono, monospace'
+        }}>
           {timeAgo(lead.created_at)}
         </span>
       </div>

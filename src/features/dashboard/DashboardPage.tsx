@@ -90,7 +90,18 @@ export function DashboardPage() {
           {/* 3 Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: Leads Ativos */}
-            <div className="glass-metric p-6 border-l-[3px] border-l-[#1E3E62] flex flex-col items-center justify-center text-center group min-h-[160px]">
+            <div 
+              className="p-6 flex flex-col items-center justify-center text-center group min-h-[160px]"
+              style={{
+                background: 'rgba(11, 25, 44, 0.45)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)',
+                borderRadius: '16px',
+                borderLeft: '3px solid rgba(30,62,98,0.8)'
+              }}
+            >
               <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Leads Ativos</p>
               <p className="text-6xl font-black text-white mt-4 font-mono tracking-tight">
                 {displayMetrics.total_leads}
@@ -98,7 +109,18 @@ export function DashboardPage() {
             </div>
 
             {/* Card 2: Propostas Enviadas */}
-            <div className="glass-metric p-6 border-l-[3px] border-l-[#F59E0B] flex flex-col items-center justify-center text-center group min-h-[160px]">
+            <div 
+              className="p-6 flex flex-col items-center justify-center text-center group min-h-[160px]"
+              style={{
+                background: 'rgba(11, 25, 44, 0.45)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)',
+                borderRadius: '16px',
+                borderLeft: '3px solid rgba(255,101,0,0.5)'
+              }}
+            >
               <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Propostas Enviadas</p>
               <p className="text-6xl font-black text-white mt-4 font-mono tracking-tight">
                 {displayMetrics.total_propostas}
@@ -115,13 +137,30 @@ export function DashboardPage() {
             </div>
 
             {/* Card 3: Fechados no Mês */}
-            <div className="glass-metric p-6 border-l-[3px] border-l-[#22C55E] flex flex-col items-center justify-center text-center group min-h-[160px]">
+            <div 
+              className="p-6 flex flex-col items-center justify-center text-center group min-h-[160px]"
+              style={{
+                background: 'rgba(11, 25, 44, 0.45)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)',
+                borderRadius: '16px',
+                borderLeft: '3px solid #FF6500'
+              }}
+            >
               <p className="text-xs font-semibold tracking-widest text-[#A1B5CC] uppercase">Fechados no Mês</p>
-              <p className="text-6xl font-black text-[#22C55E] mt-4 font-mono tracking-tight">
+              <p className="text-6xl font-black text-white mt-4 font-mono tracking-tight">
                 {displayMetrics.fechados_mes}
               </p>
               <div className="mt-4 flex items-center justify-center">
-                <span className="bg-[#22C55E]/10 text-[#22C55E] text-xs px-2.5 py-0.5 rounded-full font-mono font-medium border border-[#22C55E]/20">
+                <span 
+                  className={`text-xs px-2.5 py-0.5 rounded-full font-mono font-medium border ${
+                    displayMetrics.taxa_conversao === 0
+                      ? 'bg-[#1E3E62]/20 text-[#A1B5CC] border-[#1E3E62]/30'
+                      : 'bg-[#FF6500]/10 text-[#FF6500] border-[#FF6500]/20'
+                  }`}
+                >
                   {displayMetrics.taxa_conversao.toFixed(1)}% conversão
                 </span>
               </div>
@@ -130,12 +169,29 @@ export function DashboardPage() {
 
           {/* Condition for Empty State or Chart */}
           {displayMetrics.total_leads === 0 ? (
-            <div className="border border-dashed border-[#1E3E62]/30 rounded-xl p-8 text-center flex flex-col items-center justify-center min-h-[220px]">
-              <Target className="text-[#1E3E62]/40" size={32} />
-              <h3 className="text-white/60 font-medium mt-3">Seu funil está vazio</h3>
-              <p className="text-[#A1B5CC] text-sm mt-1">Crie seu primeiro lead no Pipeline para ver as métricas.</p>
-              <Link to="/pipeline" className="mt-4 inline-flex items-center gap-1 text-[#FF6500] hover:text-[#FF6500]/80 text-sm font-medium transition-colors">
-                Ir para o Pipeline &rarr;
+            <div style={{
+              background: 'rgba(11,25,44,0.3)',
+              backdropFilter: 'blur(12px)',
+              border: '1px dashed rgba(30,62,98,0.4)',
+              borderRadius: '16px',
+              padding: '48px',
+              textAlign: 'center'
+            }}>
+              <div style={{color: 'rgba(30,62,98,0.5)', marginBottom: '12px'}}>
+                <Target size={36} className="mx-auto" />
+              </div>
+              <p style={{color: 'rgba(255,255,255,0.5)', fontWeight: 600}}>
+                Seu funil está vazio
+              </p>
+              <p style={{color: '#A1B5CC', fontSize: '14px', marginTop: '6px'}}>
+                Crie seu primeiro lead no Pipeline para ver as métricas evoluírem.
+              </p>
+              <Link to="/pipeline" style={{
+                color: '#FF6500', fontSize: '14px', fontWeight: 500,
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                marginTop: '16px'
+              }}>
+                Ir para o Pipeline →
               </Link>
             </div>
           ) : (
