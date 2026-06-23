@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useUpdateLead, type UpdateLeadPayload } from '../hooks/useUpdateLead'
 import { useTasks } from '../hooks/useTasks'
+import { AUTOMATION_MARKER } from '@/lib/automations'
 import type { Task } from '@/types/database'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1099,6 +1100,15 @@ export function LeadPanel({
                                 >
                                   {INTERACTION_TYPES.find(t => t.type === (item.type ?? 'note'))?.label ?? 'Nota'}
                                 </span>
+                                {item.content.includes(AUTOMATION_MARKER) && (
+                                  <span
+                                    className="text-[9px] font-semibold uppercase tracking-[0.08em] px-1.5 py-0.5 rounded flex items-center gap-1"
+                                    style={{ color: '#FF6500', background: 'rgba(255,101,0,0.10)' }}
+                                  >
+                                    <Sparkles size={9} />
+                                    Auto
+                                  </span>
+                                )}
                                 <span className="text-[10px] font-mono text-white/30">
                                   {formatInteractionDate(item.created_at)}
                                 </span>

@@ -2,6 +2,9 @@ import { supabase } from './supabase'
 import { toast } from 'sonner'
 import type { LeadStatus } from '@/types/pipeline'
 
+// Marcador usado para identificar interações geradas por automação na timeline.
+export const AUTOMATION_MARKER = 'automação Kotz'
+
 interface AutomationContext {
   leadId: string
   leadName: string
@@ -49,6 +52,66 @@ const RULES: AutomationRule[] = [
 
       toast.success('Automação ativada', {
         description: 'Criei automaticamente um follow-up para daqui a 3 dias úteis.',
+      })
+    },
+  },
+  {
+    // Envio de e-mail transacional da proposta via Resend (server-side).
+    trigger: (ctx) => ctx.newStatus === 'proposta_enviada' && ctx.oldStatus !== 'proposta_enviada',
+    execute: async (ctx) => {
+      // 1. Localiza o e-mail do contato vinculado ao lead
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('contact_id')
+        .eq('id', ctx.leadId)
+        .single()
+
+      if (!lead?.contact_id) return // sem contato → nada a enviar
+
+      const { data: contact } = await supabase
+        .from('contacts')
+        .select('name, email')
+        .eq('id', lead.contact_id)
+        .single()
+
+      if (!contact?.email) return // contato sem e-mail → silencioso
+
+      // 2. Token do usuário para autenticar a chamada ao endpoint serverless
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) return
+
+      // 3. Dispara o e-mail via API (falha silenciosa — não bloqueia o lead)
+      const res = await fetch('/api/send-proposal-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          to: contact.email,
+          contactName: contact.name,
+          leadName: ctx.leadName,
+        }),
+      })
+
+      if (!res.ok) {
+        console.error('[automation] envio de e-mail falhou:', res.status)
+        return
+      }
+
+      // 4. Registra na timeline como interação de e-mail automática
+      const { data: { user } } = await supabase.auth.getUser()
+      await supabase.from('lead_interactions').insert({
+        lead_id: ctx.leadId,
+        tenant_id: ctx.tenantId,
+        type: 'email',
+        content: `E-mail automático enviado pela ${AUTOMATION_MARKER} para ${contact.email}`,
+        created_by: user?.id ?? null,
+      })
+
+      toast.success('E-mail enviado', {
+        description: `Proposta enviada automaticamente para ${contact.email}.`,
       })
     },
   },
