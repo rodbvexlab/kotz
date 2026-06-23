@@ -619,50 +619,58 @@ export function LeadPanel({
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={[
-          'fixed inset-0 bg-black/60 backdrop-blur-[2px] z-40 transition-opacity duration-200',
-          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-        ].join(' ')}
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {open && lead && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-[8px] z-40"
+            onClick={onClose}
+          />
 
-      {/* Panel */}
-      <div
-        className={[
-          'fixed top-0 right-0 bottom-0 z-50 w-full max-w-[480px]',
-          'bg-[#080c14] border-l border-[#1E3E62]/30',
-          'flex flex-col shadow-[-8px_0_40px_rgba(0,0,0,0.55)]',
-          'transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
-          open ? 'translate-x-0' : 'translate-x-full',
-        ].join(' ')}
-      >
-        {lead && (
-          <>
-            {/* ── Header ── */}
-            <GlassCard variant="overlay" className="flex items-start justify-between px-6 pt-6 pb-4 shrink-0">
-              <div className="flex-1 pr-4 min-w-0">
-                <h2 className="text-xl font-bold text-white tracking-tight leading-tight truncate">
-                  {mode === 'view' ? lead.name : form.name || 'Novo nome…'}
-                </h2>
-                {(mode === 'view' ? lead.service : form.service) && (
-                  <p className="text-sm text-[#A1B5CC] mt-1 flex items-center gap-1.5 font-medium">
-                    <Sparkles size={12} className="text-[#FF6500] shrink-0" />
-                    <span className="truncate">
-                      {mode === 'view' ? lead.service : form.service}
-                    </span>
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#A1B5CC] hover:text-white hover:bg-[#1E3E62]/20 transition-all shrink-0"
-              >
-                <X size={16} />
-              </button>
-            </GlassCard>
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              key="modal-content"
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-[900px] max-h-[85vh] flex flex-col rounded-2xl pointer-events-auto overflow-hidden"
+              style={{
+                background: '#080c14',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.60), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06)',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* ── Header ── */}
+              <GlassCard variant="overlay" className="flex items-start justify-between px-6 pt-6 pb-4 shrink-0 rounded-none">
+                <div className="flex-1 pr-4 min-w-0">
+                  <h2 className="text-xl font-bold text-white tracking-tight leading-tight truncate">
+                    {mode === 'view' ? lead.name : form.name || 'Novo nome…'}
+                  </h2>
+                  {(mode === 'view' ? lead.service : form.service) && (
+                    <p className="text-sm text-[#A1B5CC] mt-1 flex items-center gap-1.5 font-medium">
+                      <Sparkles size={12} className="text-[#FF6500] shrink-0" />
+                      <span className="truncate">
+                        {mode === 'view' ? lead.service : form.service}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={onClose}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl text-[#A1B5CC] hover:text-white hover:bg-white/[0.06] transition-all shrink-0 cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </GlassCard>
 
             {/* ── Content ── */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 overscroll-contain">
@@ -1221,14 +1229,15 @@ export function LeadPanel({
 
             </div>
 
-            {/* ── Footer metadata ── */}
-            <div className="px-6 py-4 border-t border-[#1E3E62]/20 flex items-center gap-2 text-[#A1B5CC]/50 text-[11px] font-mono shrink-0">
-              <Calendar size={11} className="text-[#A1B5CC]/40" />
-              <span>Criado em {formatDate(lead.created_at)}</span>
-            </div>
-          </>
-        )}
-      </div>
-    </>
+              {/* ── Footer metadata ── */}
+              <div className="px-6 py-4 border-t border-[#1E3E62]/20 flex items-center gap-2 text-[#A1B5CC]/50 text-[11px] font-mono shrink-0">
+                <Calendar size={11} className="text-[#A1B5CC]/40" />
+                <span>Criado em {formatDate(lead.created_at)}</span>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
