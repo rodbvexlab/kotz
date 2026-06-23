@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Eye, EyeOff } from 'lucide-react'
-import StarBorder from '@/components/ui/StarBorder'
+import AttractButton from '@/components/ui/AttractButton'
 import Orb from '@/components/ui/Orb'
 
 export function LoginPage() {
@@ -154,16 +154,13 @@ export function LoginPage() {
             )}
 
             <div className="flex gap-3 pt-2">
-              <StarBorder
-                color="#FF6500"
-                speed="6s"
-                thickness={0.5}
+              <AttractButton
                 onClick={handleEmailLogin}
                 disabled={loading || !email || !password}
                 className="w-full flex-1"
               >
                 {loading ? 'Entrando...' : 'Entrar'}
-              </StarBorder>
+              </AttractButton>
               <button
                 onClick={handleEmailSignUp}
                 disabled={loading || !email || !password}
