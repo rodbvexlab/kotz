@@ -1,22 +1,30 @@
--- Sprint 12: Lead Interactions (history/memory)
--- Drops the old minimal table and recreates with full schema.
+-- Sprint 12: Lead Interactions — upgrade schema
+-- Non-destructive: renames columns and adds new ones, preserving existing data.
 
-DROP TABLE IF EXISTS public.lead_interactions;
+-- Rename note → content
+ALTER TABLE public.lead_interactions RENAME COLUMN note TO content;
 
-CREATE TABLE public.lead_interactions (
-  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  lead_id    uuid NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
-  tenant_id  uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
-  type       text NOT NULL DEFAULT 'note' CHECK (type IN ('note', 'call', 'email', 'meeting')),
-  content    text NOT NULL,
-  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+-- Rename user_id → created_by
+ALTER TABLE public.lead_interactions RENAME COLUMN user_id TO created_by;
 
-CREATE INDEX idx_interactions_lead   ON public.lead_interactions(lead_id);
-CREATE INDEX idx_interactions_tenant ON public.lead_interactions(tenant_id);
+-- Add type column with default 'note' for existing rows
+ALTER TABLE public.lead_interactions
+  ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'note';
 
--- RLS (mirrors leads table policies)
+-- Add check constraint for valid types
+ALTER TABLE public.lead_interactions
+  ADD CONSTRAINT lead_interactions_type_check
+  CHECK (type IN ('note', 'call', 'email', 'meeting'));
+
+-- Add indexes if missing
+CREATE INDEX IF NOT EXISTS idx_interactions_lead   ON public.lead_interactions(lead_id);
+CREATE INDEX IF NOT EXISTS idx_interactions_tenant ON public.lead_interactions(tenant_id);
+
+-- RLS policies (idempotent — drop if exist first)
+DROP POLICY IF EXISTS "Tenant members can view interactions" ON public.lead_interactions;
+DROP POLICY IF EXISTS "Tenant members can insert interactions" ON public.lead_interactions;
+DROP POLICY IF EXISTS "Tenant members can update their interactions" ON public.lead_interactions;
+
 ALTER TABLE public.lead_interactions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Tenant members can view interactions"
