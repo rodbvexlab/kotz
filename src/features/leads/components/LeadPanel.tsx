@@ -14,9 +14,9 @@ export interface LeadPanelProps {
 }
 
 const CHANNEL_META = {
-  instagram: { icon: <Instagram size={14} />, label: 'Instagram' },
-  whatsapp:  { icon: <MessageCircle size={14} />, label: 'WhatsApp' },
-  indicacao: { icon: <Users size={14} />, label: 'Indicação' },
+  instagram: { icon: <Instagram size={11} className="mr-0.5" />, label: 'Instagram' },
+  whatsapp:  { icon: <MessageCircle size={11} className="mr-0.5" />, label: 'WhatsApp' },
+  indicacao: { icon: <Users size={11} className="mr-0.5" />, label: 'Indicação' },
   outro:     { icon: null, label: 'Outro' },
 }
 
@@ -33,7 +33,7 @@ const STATUS_COLOR: Record<string, string> = {
   em_contato:       '#FF6500',
   proposta_enviada: '#F59E0B',
   fechado:          '#22C55E',
-  perdido:          '#6B7280',
+  perdido:          '#52525B',
 }
 
 function formatDate(iso: string) {
@@ -152,15 +152,15 @@ export function LeadPanel({
               <div className="flex flex-wrap gap-2">
                 {/* Status badge */}
                 <span
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                  className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded border"
                   style={{
                     color: lead.status === 'novo' ? '#A1B5CC' : STATUS_COLOR[lead.status],
-                    backgroundColor: `${STATUS_COLOR[lead.status]}18`,
-                    border: `1px solid ${STATUS_COLOR[lead.status]}30`,
+                    backgroundColor: `${STATUS_COLOR[lead.status]}04`,
+                    borderColor: `${STATUS_COLOR[lead.status]}20`,
                   }}
                 >
                   <span
-                    className="w-1.5 h-1.5 rounded-full"
+                    className="w-1.5 h-1.5 rounded-full animate-pulse"
                     style={{ backgroundColor: STATUS_COLOR[lead.status] }}
                   />
                   {STATUS_LABEL[lead.status]}
@@ -168,7 +168,20 @@ export function LeadPanel({
 
                 {/* Canal */}
                 {lead.channel && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-[#A1B5CC] bg-[#1E3E62]/10 border border-[#1E3E62]/20 px-3 py-1.5 rounded-full font-medium">
+                  <span 
+                    className="inline-flex items-center gap-1 text-[9px] font-mono font-bold tracking-widest uppercase px-2 py-1 rounded border"
+                    style={{
+                      background: lead.channel === 'instagram' ? 'rgba(244, 114, 182, 0.04)' :
+                                  lead.channel === 'whatsapp' ? 'rgba(74, 222, 128, 0.04)' :
+                                  lead.channel === 'indicacao' ? 'rgba(96, 165, 250, 0.04)' : 'rgba(30, 62, 98, 0.10)',
+                      color: lead.channel === 'instagram' ? '#F472B6' :
+                             lead.channel === 'whatsapp' ? '#4ADE80' :
+                             lead.channel === 'indicacao' ? '#60A5FA' : '#A1B5CC',
+                      borderColor: lead.channel === 'instagram' ? 'rgba(244, 114, 182, 0.15)' :
+                                   lead.channel === 'whatsapp' ? 'rgba(74, 222, 128, 0.15)' :
+                                   lead.channel === 'indicacao' ? 'rgba(96, 165, 250, 0.15)' : 'rgba(30, 62, 98, 0.20)',
+                    }}
+                  >
                     {CHANNEL_META[lead.channel]?.icon}
                     {CHANNEL_META[lead.channel]?.label}
                   </span>

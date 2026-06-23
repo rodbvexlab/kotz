@@ -5,115 +5,172 @@ interface LeadCardOverlayProps {
   lead: Lead
 }
 
-const CHANNEL_ICON = {
-  instagram:  <Instagram size={14} />,
-  whatsapp:   <MessageCircle size={14} />,
-  indicacao:  <Users size={14} />,
-  outro:      null,
-}
-
-const CHANNEL_LABEL = {
-  instagram: 'Instagram',
-  whatsapp:  'WhatsApp',
-  indicacao: 'Indicação',
-  outro:     'Outro',
-}
-
 const STATUS_COLOR: Record<string, string> = {
   novo:             '#1E3E62',
   em_contato:       '#FF6500',
   proposta_enviada: '#F59E0B',
   fechado:          '#22C55E',
-  perdido:          '#6B7280',
+  perdido:          '#52525B',
 }
 
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 0) return ''
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-}
-
-function getAvatarBg(name: string) {
-  const colors = ['#FF6500', '#1E3E62', '#2a4a7f', '#7c3aed']
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+const channelIcon = (channel?: string | null) => {
+  if (!channel) return null
+  switch (channel) {
+    case 'instagram':
+      return <Instagram size={11} className="mr-0.5" />
+    case 'whatsapp':
+      return <MessageCircle size={11} className="mr-0.5" />
+    case 'indicacao':
+      return <Users size={11} className="mr-0.5" />
+    default:
+      return null
   }
-  const index = Math.abs(hash) % colors.length
-  return colors[index]
 }
 
-function timeAgo(dateString: string) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 0) {
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    if (diffHours === 0) {
-      const diffMins = Math.floor(diffMs / (1000 * 60))
-      return diffMins <= 1 ? 'agora' : `há ${diffMins}m`
-    }
-    return `há ${diffHours}h`
+const channelBadgeStyle = (channel?: string | null): React.CSSProperties => {
+  const styles: Record<string, React.CSSProperties> = {
+    instagram: { 
+      background: 'rgba(244, 114, 182, 0.04)', 
+      color: '#F472B6', 
+      borderColor: 'rgba(244, 114, 182, 0.15)' 
+    },
+    whatsapp: { 
+      background: 'rgba(74, 222, 128, 0.04)', 
+      color: '#4ADE80', 
+      borderColor: 'rgba(74, 222, 128, 0.15)' 
+    },
+    indicacao: { 
+      background: 'rgba(96, 165, 250, 0.04)', 
+      color: '#60A5FA', 
+      borderColor: 'rgba(96, 165, 250, 0.15)' 
+    },
+    outro: { 
+      background: 'rgba(30, 62, 98, 0.10)', 
+      color: '#A1B5CC', 
+      borderColor: 'rgba(30, 62, 98, 0.20)' 
+    },
   }
-  if (diffDays === 1) return 'ontem'
-  return `há ${diffDays}d`
+  const base: React.CSSProperties = {
+    fontSize: '9px',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    display: 'inline-flex',
+    alignItems: 'center'
+  }
+  return { ...base, ...(channel ? styles[channel] : styles.outro) }
+}
+
+const channelLabel = (channel?: string | null): string => {
+  const labels: Record<string, string> = {
+    instagram: 'Instagram',
+    whatsapp:  'WhatsApp',
+    indicacao: 'Indicação',
+    outro:     'Outro',
+  }
+  return channel ? labels[channel] : labels.outro
+}
+
+function initials(name: string): string {
+  return name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase()).join('')
+}
+
+function avatarColor(name: string): string {
+  const palette = ['#1E3E62', '#2a4a7f', '#FF6500', '#7c3aed', '#0891b2']
+  return palette[name.charCodeAt(0) % palette.length]
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return 'agora'
+  if (m < 60) return `há ${m}min`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `há ${h}h`
+  const d = Math.floor(h / 24)
+  return `há ${d}d`
 }
 
 export function LeadCardOverlay({ lead }: LeadCardOverlayProps) {
-  const style = {
-    borderLeft: `2px solid ${STATUS_COLOR[lead.status]}`,
+  const statusColor = STATUS_COLOR[lead.status] || '#1E3E62'
+
+  const style: React.CSSProperties = {
+    background: 'rgba(15, 32, 54, 0.60)',
+    backdropFilter: 'blur(20px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+    border: '1px solid rgba(255, 101, 0, 0.40)',
+    borderLeft: `3px solid ${statusColor}`,
+    borderRadius: '12px',
+    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 16px rgba(255, 101, 0, 0.15)',
+    padding: '14px',
+    width: '256px', // 64rem equivalent in pixels (w-64 is 16rem/256px)
   }
 
   return (
     <div
       style={style}
-      className="group relative p-4 cursor-grabbing select-none glass-card scale-[1.03] rotate-[0.5deg] shadow-[0_20px_60px_rgba(0,0,0,0.6)] w-64"
+      className="group relative overflow-hidden scale-[1.03] rotate-[0.5deg] cursor-grabbing select-none"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          {/* Avatar */}
-          <div 
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 border border-white/15"
-            style={{ backgroundColor: getAvatarBg(lead.name) }}
-          >
-            {getInitials(lead.name)}
-          </div>
-          {/* Nome */}
-          <span className="text-sm font-semibold text-white truncate leading-tight">
+      {/* Status indicator glow dot in top right */}
+      <div 
+        className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full"
+        style={{ 
+          backgroundColor: statusColor,
+          boxShadow: `0 0 8px 2px ${statusColor}`
+        }} 
+      />
+
+      {/* TOP: Avatar + ID + Nome */}
+      <div className="flex items-center gap-3">
+        {/* Squircle Avatar with thin border */}
+        <div 
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0 border border-white/10"
+          style={{ background: avatarColor(lead.name) }}
+        >
+          {initials(lead.name)}
+        </div>
+
+        {/* Lead details */}
+        <div className="flex-1 min-w-0 pr-2">
+          <span className="block text-[8px] font-mono text-[#A1B5CC]/40 tracking-wider">
+            #{lead.id.substring(0, 4).toUpperCase()}
+          </span>
+          <span className="block text-sm font-semibold text-white truncate leading-tight">
             {lead.name}
           </span>
         </div>
-        {/* Icon canal */}
-        {lead.channel && (
-          <span className="text-[#A1B5CC]/70 shrink-0">
-            {CHANNEL_ICON[lead.channel]}
-          </span>
-        )}
       </div>
 
-      {/* Serviço de interesse */}
+      {/* MIDDLE: Service capsule (Terminal command output style) */}
       {lead.service && (
-        <p className="text-xs text-[#A1B5CC] mt-2 truncate pl-9">
-          {lead.service}
-        </p>
+        <div className="mt-2.5 pl-10">
+          <div className="inline-flex items-center gap-1.5 bg-black/40 border border-[#1E3E62]/30 rounded px-2 py-0.5 max-w-full">
+            <span className="text-[9px] font-mono text-[#FF6500]">&gt;</span>
+            <span className="text-[11px] text-[#A1B5CC] truncate font-medium">
+              {lead.service}
+            </span>
+          </div>
+        </div>
       )}
 
-      {/* Footer: badge canal + time ago */}
-      <div className="flex items-center justify-between mt-3 pl-9">
-        {lead.channel ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#A1B5CC] bg-[#1E3E62]/10 border border-[#1E3E62]/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-            {CHANNEL_LABEL[lead.channel]}
-          </span>
-        ) : (
-          <span />
-        )}
-        <span className="text-[10px] font-mono text-[#A1B5CC]/60">
-          {timeAgo(lead.created_at)}
+      {/* Tech divider (Dashed) */}
+      <div className="mt-3.5 border-t border-dashed border-[#1E3E62]/20" />
+
+      {/* BOTTOM: Channel badge + time ago */}
+      <div className="mt-3 flex items-center justify-between">
+        {/* Notched tag style for channel */}
+        <span style={channelBadgeStyle(lead.channel)}>
+          {channelIcon(lead.channel)}
+          {channelLabel(lead.channel)}
         </span>
+
+        {/* Time ago with tiny code indicator dot */}
+        <div className="flex items-center gap-1 text-[10px] font-mono text-[#A1B5CC]/50">
+          <span className="w-1 h-1 rounded-full bg-[#1E3E62]" />
+          <span>{timeAgo(lead.created_at)}</span>
+        </div>
       </div>
     </div>
   )

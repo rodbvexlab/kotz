@@ -45,10 +45,11 @@ export function KanbanColumn({ column, leads, isOver, onOpenLead, onAddLead }: K
             {column.label}
           </span>
           <span
-            className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-md"
+            className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border"
             style={{
-              color: isDrop ? '#6B7280' : column.accent,
-              backgroundColor: isDrop ? '#6B728015' : `${column.accent}18`,
+              color: isDrop ? '#A1B5CC' : column.accent,
+              backgroundColor: isDrop ? 'rgba(30, 62, 98, 0.10)' : `${column.accent}04`,
+              borderColor: isDrop ? 'rgba(30, 62, 98, 0.20)' : `${column.accent}20`,
             }}
           >
             {leads.length}
