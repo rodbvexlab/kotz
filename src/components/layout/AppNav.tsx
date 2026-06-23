@@ -10,23 +10,26 @@ export function AppNav() {
 
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
-    { to: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
+    { to: '/pipeline',  label: 'Pipeline',  icon: LayoutGrid },
   ]
 
-  function capitalize(str: string) {
-    return str.replace(/\b\w/g, c => c.toUpperCase())
-  }
+  const capitalize = (s: string) =>
+    s.replace(/\b\w/g, c => c.toUpperCase())
 
   return (
-    <header className="flex items-center justify-between px-6 py-3 border-b border-[#1E3E62]/20 bg-black/80 backdrop-blur-sm sticky top-0 z-30">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3 bg-black/80 backdrop-blur-md border-b border-[#1E3E62]/20">
 
-      {/* Logo + Nav links */}
+      {/* Esquerda: Logo + links */}
       <div className="flex items-center gap-6">
-        <Link to="/dashboard" className="text-lg font-bold tracking-tight">
+        <Link to="/dashboard" className="text-lg font-bold tracking-tight shrink-0">
           <span className="text-white">Ko</span>
           <span className="text-[#FF6500]">tz</span>
         </Link>
 
+        {/* Divider */}
+        <div className="h-4 w-px bg-[#1E3E62]/30" />
+
+        {/* Nav links */}
         <nav className="flex items-center gap-1">
           {links.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to
@@ -35,10 +38,11 @@ export function AppNav() {
                 key={to}
                 to={to}
                 className={[
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all',
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg',
+                  'text-sm font-medium transition-all duration-150',
                   active
-                    ? 'bg-[#FF6500]/10 text-[#FF6500] font-medium'
-                    : 'text-[#1E3E62] hover:text-white hover:bg-[#1E3E62]/20',
+                    ? 'bg-[#FF6500]/10 text-[#FF6500] border border-[#FF6500]/20'
+                    : 'text-[#1E3E62] hover:text-white hover:bg-[#1E3E62]/15 border border-transparent',
                 ].join(' ')}
               >
                 <Icon size={14} />
@@ -49,17 +53,25 @@ export function AppNav() {
         </nav>
       </div>
 
-      {/* Tenant + signout */}
+      {/* Direita: Tenant + logout */}
       <div className="flex items-center gap-3">
         {tenant && (
-          <span className="text-sm text-[#1E3E62]">
-            {capitalize(tenant.name)}
-          </span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0B192C] border border-[#1E3E62]/20">
+            <div className="w-5 h-5 rounded-full bg-[#FF6500]/20 border border-[#FF6500]/30 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-[#FF6500]">
+                {capitalize(tenant.name).charAt(0)}
+              </span>
+            </div>
+            <span className="text-xs text-white/70 font-medium">
+              {capitalize(tenant.name)}
+            </span>
+          </div>
         )}
+
         <button
           onClick={signOut}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#1E3E62] hover:text-white hover:bg-[#1E3E62]/20 transition-all"
           title="Sair"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#1E3E62] hover:text-white hover:bg-[#1E3E62]/20 transition-all border border-transparent hover:border-[#1E3E62]/30"
         >
           <LogOut size={14} />
         </button>
