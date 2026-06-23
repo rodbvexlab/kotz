@@ -83,7 +83,7 @@ function initials(name: string): string {
 }
 
 function avatarColor(name: string): string {
-  const palette = ['#1E3E62', '#2a4a7f', '#FF6500', '#7c3aed', '#0891b2']
+  const palette = ['#1E3E62', '#2a4a7f', '#0d3055', '#0891b2', '#1a5276']
   return palette[name.charCodeAt(0) % palette.length]
 }
 
@@ -113,15 +113,15 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
   const statusColor = STATUS_COLOR[lead.status] || '#1E3E62'
 
   const style: React.CSSProperties = {
-    background: 'rgba(255, 255, 255, 0.04)',
+    background: 'rgba(255, 255, 255, 0.05)',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
     border: isHovered ? '1px solid rgba(255, 101, 0, 0.30)' : '1px solid rgba(255, 255, 255, 0.09)',
     borderLeft: `3px solid ${statusColor}`,
     borderRadius: '12px',
-    boxShadow: isHovered 
-      ? '0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 101, 0, 0.10)'
-      : '0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+    boxShadow: isHovered
+      ? '0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(255,101,0,0.10)'
+      : '0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
     padding: '14px',
     cursor: isDragging ? 'grabbing' : 'grab',
     opacity: isDragging ? 0.5 : 1,
@@ -158,7 +158,7 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
         }} 
       />
 
-      {/* TOP: Avatar + ID + Nome */}
+      {/* TOP: Avatar + Nome */}
       <div className="flex items-center gap-3">
         {/* Squircle Avatar with thin border */}
         <div 
@@ -170,9 +170,6 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
 
         {/* Lead details */}
         <div className="flex-1 min-w-0 pr-2">
-          <span className="block text-[8px] font-mono text-[#A1B5CC]/40 tracking-wider">
-            #{lead.id.substring(0, 4).toUpperCase()}
-          </span>
           <span className="block text-sm font-semibold text-white truncate leading-tight group-hover:text-[#FF6500] transition-colors duration-150">
             {lead.name}
           </span>
