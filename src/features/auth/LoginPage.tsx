@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Eye, EyeOff } from 'lucide-react'
+import StarBorder from '@/components/ui/StarBorder'
+import Orb from '@/components/ui/Orb'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -152,13 +154,16 @@ export function LoginPage() {
             )}
 
             <div className="flex gap-3 pt-2">
-              <button
+              <StarBorder
+                color="#FF6500"
+                speed="4s"
+                thickness={1}
                 onClick={handleEmailLogin}
                 disabled={loading || !email || !password}
-                className="flex-1 bg-[#FF6500] hover:bg-[#e55a00] text-white font-semibold rounded-lg py-2.5 text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed shadow-md shadow-[#FF6500]/10"
+                className="w-full"
               >
-                Entrar
-              </button>
+                {loading ? 'Entrando...' : 'Entrar'}
+              </StarBorder>
               <button
                 onClick={handleEmailSignUp}
                 disabled={loading || !email || !password}
@@ -171,23 +176,53 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* LADO DIREITO: Visual/Brand (md+) */}
-      <div 
-        className="hidden md:block md:w-1/2 border-l border-[#1E3E62]/20 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #0B192C 0%, #000000 100%)' }}
+      {/* LADO DIREITO — Orb WebGL animado */}
+      <div className="hidden md:flex flex-1 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0B192C 0%, #000000 100%)',
+          borderLeft: '1px solid rgba(30,62,98,0.20)'
+        }}
       >
-        {/* Glow laranja sutil no centro */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,101,0,0.08)_0%,transparent_70%)] pointer-events-none" />
-
-        <div className="absolute inset-0 flex flex-col justify-center items-center p-12">
-          <div className="max-w-md w-full text-center space-y-6 z-10">
-            <div className="min-h-[60px] flex items-center justify-center">
-              <h2 className="text-3xl font-bold tracking-tight text-white font-sans">
-                <span className="typewriter-text font-bold"></span>
-              </h2>
-            </div>
-            <p className="text-sm font-mono text-[#1E3E62] tracking-wider">— Kotz CRM</p>
+        {/* Orb WebGL animado */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{ width: '500px', height: '500px' }}>
+            <Orb
+              hue={20}
+              hoverIntensity={0.4}
+              rotateOnHover={true}
+              backgroundColor="#000000"
+            />
           </div>
+        </div>
+
+        {/* Texto sobre o Orb */}
+        <div style={{
+          position: 'absolute',
+          bottom: '48px',
+          left: 0, right: 0,
+          textAlign: 'center',
+          zIndex: 10,
+        }}>
+          {/* typewriter CSS atual — manter */}
+          <div className="min-h-[40px] flex items-center justify-center">
+            <h2 className="text-2xl font-bold tracking-tight text-white font-sans">
+              <span className="typewriter-text font-bold"></span>
+            </h2>
+          </div>
+          <p style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            color: '#1E3E62',
+            fontSize: '13px',
+            marginTop: '12px'
+          }}>
+            — Kotz CRM
+          </p>
         </div>
       </div>
     </div>
