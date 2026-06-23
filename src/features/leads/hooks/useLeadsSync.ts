@@ -111,11 +111,20 @@ export function useLeadsSync() {
     [tenant, addLead, updateLead, init]
   )
 
+  // ─── 4. Atualiza lead completo (campos + status) ──────────────────────────
+  const handleUpdateLead = useCallback(
+    (lead: Lead) => {
+      updateLead(lead)   // dispatch UPDATE_LEAD → move entre colunas se status mudou
+    },
+    [updateLead]
+  )
+
   return {
     state,
     loading: tenantLoading || loading,
     error,
     handleMove,
     handleAddLead,
+    handleUpdateLead,
   }
 }

@@ -9,7 +9,7 @@ import { AppNav } from '@/components/layout/AppNav'
 import type { Lead } from '@/types/pipeline'
 
 export function PipelinePage() {
-  const { state, loading, error, handleMove, handleAddLead } = useLeadsSync()
+  const { state, loading, error, handleMove, handleAddLead, handleUpdateLead } = useLeadsSync()
   const [activeLead, setActiveLead] = useState<Lead | null>(null)
   const [searchParams] = useSearchParams()
 
@@ -92,6 +92,10 @@ export function PipelinePage() {
         interactions={interactions}
         loadingInteractions={loadingInteractions}
         onAddInteraction={onAddInteraction}
+        onUpdateLead={(updated) => {
+          handleUpdateLead(updated)   // atualiza Kanban (move de coluna se status mudou)
+          setActiveLead(updated)      // mantém panel sincronizado com novos dados
+        }}
       />
     </div>
   )
