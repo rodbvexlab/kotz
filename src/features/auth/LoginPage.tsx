@@ -156,11 +156,11 @@ export function LoginPage() {
             <div className="flex gap-3 pt-2">
               <StarBorder
                 color="#FF6500"
-                speed="4s"
-                thickness={1}
+                speed="6s"
+                thickness={0.5}
                 onClick={handleEmailLogin}
                 disabled={loading || !email || !password}
-                className="w-full"
+                className="w-full flex-1"
               >
                 {loading ? 'Entrando...' : 'Entrar'}
               </StarBorder>
