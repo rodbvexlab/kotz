@@ -4,16 +4,162 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design System: CSS Custom Properties ──────────────────────────────── */
+:root {
+  /* Cores base */
+  --color-orange:       #FF6500;
+  --color-orange-hover: #e55a00;
+  --color-navy:         #1E3E62;
+  --color-dark:         #0B192C;
+  --color-black:        #000000;
+
+  /* Texto */
+  --text-primary:   #FFFFFF;
+  --text-secondary: #A1B5CC;
+  --text-muted:     #1E3E62;
+
+  /* Glass — valores exatos do design system */
+  --glass-card-bg:      rgba(11, 25, 44, 0.35);
+  --glass-metric-bg:    rgba(11, 25, 44, 0.50);
+  --glass-overlay-bg:   rgba(11, 25, 44, 0.75);
+  --glass-nav-bg:       rgba(0, 0, 0, 0.80);
+
+  /* Border radius semânticos */
+  --radius-badge: 6px;
+  --radius-card:  12px;
+  --radius-panel: 16px;
+
+  /* Transições */
+  --transition-base:  150ms ease;
+  --transition-panel: 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 @layer base {
   * { box-sizing: border-box; }
+
   html { -webkit-font-smoothing: antialiased; }
+
   body {
     background-color: #000;
     color: #fff;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+
+  /* Scrollbar design system */
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: #0B192C; }
   ::-webkit-scrollbar-thumb { background: #1E3E62; border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: #FF6500; }
+}
+
+/* ─── Components — Glass Morphism ────────────────────────────────────────── */
+@layer components {
+
+  /* glass-card — Lead cards no kanban */
+  .glass-card {
+    background:          var(--glass-card-bg);
+    backdrop-filter:     blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border:              1px solid rgba(255, 255, 255, 0.10);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 2px 8px  rgba(0, 0, 0, 0.3),
+      inset 0  1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-card);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(255, 101, 0, 0.25);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 101, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* glass-metric — Dashboard metric cards */
+  .glass-metric {
+    background:          var(--glass-metric-bg);
+    backdrop-filter:     blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border:              1px solid rgba(255, 255, 255, 0.08);
+    border-top:          1px solid rgba(255, 101, 0, 0.30);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-panel);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* glass-overlay — LeadPanel header, modais */
+  .glass-overlay {
+    background:          var(--glass-overlay-bg);
+    backdrop-filter:     blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border-bottom:       1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* glass-nav — AppNav sticky */
+  .glass-nav {
+    background:          var(--glass-nav-bg);
+    backdrop-filter:     blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border-bottom:       1px solid rgba(30, 62, 98, 0.20);
+  }
+}
+
+/* ─── Utilities — Design System ──────────────────────────────────────────── */
+@layer utilities {
+
+  /* Label de seção padrão: sempre uppercase + tracking-widest + text-secondary */
+  .section-label {
+    font-size:      0.625rem;   /* 10px */
+    font-weight:    500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color:          var(--text-secondary);
+  }
+
+  /* Spinner padrão do design system */
+  .ds-spinner {
+    width:  1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--color-orange);
+    border-top-color: transparent;
+    border-radius: 9999px;
+    animation: spin 0.7s linear infinite;
+  }
+
+  /* Drag active state */
+  .drag-active {
+    opacity: 0.5;
+    transform: scale(0.98) rotate(0.5deg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 101, 0, 0.4);
+  }
+
+  /* Drop zone ativa */
+  .drop-zone-active {
+    border: 2px dashed rgba(255, 101, 0, 0.5) !important;
+    background: rgba(255, 101, 0, 0.04) !important;
+  }
+
+  /* Entrada de card animada */
+  .card-enter {
+    animation: slide-up 200ms ease-out;
+  }
+
+  /* Nó de timeline — recente */
+  .timeline-node-active {
+    border: 2px solid var(--color-orange);
+    background: var(--color-dark);
+  }
+
+  /* Nó de timeline — antigo */
+  .timeline-node-past {
+    border: 2px solid rgba(30, 62, 98, 0.60);
+    background: var(--color-dark);
+  }
 }
