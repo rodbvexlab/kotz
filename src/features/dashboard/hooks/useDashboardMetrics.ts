@@ -1,12 +1,38 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/lib/tenant'
+import type { Lead } from '@/types/database'
 
 export interface DashboardMetrics {
   total_leads: number
   total_propostas: number
   fechados_mes: number
   taxa_conversao: number
+}
+
+function computeMetrics(leads: Lead[]): DashboardMetrics {
+  const active = leads.filter(l => l.status !== 'perdido' && l.status !== 'fechado')
+  const propostas = leads.filter(l => l.status === 'proposta_enviada')
+
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const fechadosMes = leads.filter(
+    l => l.status === 'fechado' && l.updated_at >= monthStart,
+  )
+
+  const totalFinalizados = leads.filter(
+    l => l.status === 'fechado' || l.status === 'perdido',
+  ).length
+  const taxa = totalFinalizados > 0
+    ? Math.round((leads.filter(l => l.status === 'fechado').length / totalFinalizados) * 100)
+    : 0
+
+  return {
+    total_leads: active.length,
+    total_propostas: propostas.length,
+    fechados_mes: fechadosMes.length,
+    taxa_conversao: taxa,
+  }
 }
 
 export function useDashboardMetrics() {
@@ -17,25 +43,26 @@ export function useDashboardMetrics() {
 
   useEffect(() => {
     if (!tenant) return
+
     async function fetchMetrics() {
       setLoading(true)
-      const { data, error } = await (supabase
-        .from('tenant_metrics' as any) as any)
-        .select('*')
+      setError(null)
+
+      const { data, error: err } = await supabase
+        .from('leads')
+        .select('id, status, updated_at')
         .eq('tenant_id', tenant!.id)
-        .single()
-      if (error) {
+
+      if (err) {
         setError('Erro ao carregar métricas.')
-      } else if (data) {
-        setMetrics({
-          total_leads: Number(data.total_leads ?? 0),
-          total_propostas: Number(data.total_propostas ?? 0),
-          fechados_mes: Number(data.fechados_mes ?? 0),
-          taxa_conversao: Number(data.taxa_conversao ?? 0),
-        })
+        setLoading(false)
+        return
       }
+
+      setMetrics(computeMetrics((data ?? []) as Lead[]))
       setLoading(false)
     }
+
     fetchMetrics()
   }, [tenant])
 

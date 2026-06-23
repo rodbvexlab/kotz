@@ -92,20 +92,6 @@ export function DashboardPage() {
 
   const hasEnoughData = chartData.length > 1
 
-  // ─── § 8 Loading state — transparente para o body respirar ───────────────────
-  if (loading) {
-    return (
-      <div style={{
-        minHeight:      '100vh',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-      }}>
-        <div className="ds-spinner" />
-      </div>
-    )
-  }
-
   return (
     <div style={{
       position:      'relative',
@@ -155,6 +141,8 @@ export function DashboardPage() {
               key={id}
               style={{
                 padding:    '22px 24px',
+                transition: 'opacity 400ms ease',
+                opacity:    loading ? 0.5 : 1,
               }}
             >
               {/* Label: UPPERCASE 11px #A1B5CC letter-spacing 0.12em weight-600 */}
@@ -170,17 +158,29 @@ export function DashboardPage() {
               </p>
 
               {/* Número: 60px weight-900 Inter white letter-spacing:-2px */}
-              <p style={{
-                fontSize:      '60px',
-                fontWeight:    900,
-                lineHeight:    1,
-                fontFamily:    'Inter, sans-serif',
-                color:         'white',
-                letterSpacing: '-2px',
-                margin:        '0 0 14px 0',
-              }}>
-                {displayMetrics[key]}
-              </p>
+              {loading ? (
+                <div
+                  className="skeleton-shimmer"
+                  style={{
+                    height:       '60px',
+                    width:        '120px',
+                    borderRadius: '8px',
+                    marginBottom: '14px',
+                  }}
+                />
+              ) : (
+                <p style={{
+                  fontSize:      '60px',
+                  fontWeight:    900,
+                  lineHeight:    1,
+                  fontFamily:    'Inter, sans-serif',
+                  color:         'white',
+                  letterSpacing: '-2px',
+                  margin:        '0 0 14px 0',
+                }}>
+                  {displayMetrics[key]}
+                </p>
+              )}
 
               {/* § 5 Sparkline — cubic bezier, area 0.22, line 0.55, sem eixos */}
               <svg width="100%" height="24" viewBox="0 0 180 24" preserveAspectRatio="none">

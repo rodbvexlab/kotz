@@ -152,6 +152,13 @@
     background: rgba(255, 101, 0, 0.04) !important;
   }
 
+  /* Skeleton shimmer for loading states */
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
   /* Entrada de card animada */
   .card-enter {
     animation: slide-up 200ms ease-out;
@@ -168,4 +175,9 @@
     border: 2px solid rgba(30, 62, 98, 0.60);
     background: var(--color-dark);
   }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
