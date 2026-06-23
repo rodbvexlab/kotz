@@ -154,7 +154,6 @@ export function DashboardPage() {
             <LiquidGlassCard
               key={id}
               style={{
-                borderLeft: `3px solid ${accent}`,
                 padding:    '22px 24px',
               }}
             >
