@@ -270,6 +270,42 @@ export interface Database {
         }
         Relationships: []
       }
+      message_templates: {
+        Row: {
+          id: string
+          tenant_id: string
+          title: string
+          body: string
+          category: 'primeiro_contato' | 'follow_up' | 'proposta' | 'fechamento' | 'geral'
+          channel: 'whatsapp' | 'email' | 'instagram' | 'geral'
+          is_default: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          title: string
+          body: string
+          category?: 'primeiro_contato' | 'follow_up' | 'proposta' | 'fechamento' | 'geral'
+          channel?: 'whatsapp' | 'email' | 'instagram' | 'geral'
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          title?: string
+          body?: string
+          category?: 'primeiro_contato' | 'follow_up' | 'proposta' | 'fechamento' | 'geral'
+          channel?: 'whatsapp' | 'email' | 'instagram' | 'geral'
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -297,6 +333,9 @@ export type Task = Database['public']['Tables']['tasks']['Row']
 export type TaskStatus = Task['status']
 export type LeadInteraction = Database['public']['Tables']['lead_interactions']['Row']
 export type InteractionType = LeadInteraction['type']
+export type MessageTemplate = Database['public']['Tables']['message_templates']['Row']
+export type MessageTemplateCategory = MessageTemplate['category']
+export type MessageTemplateChannel = MessageTemplate['channel']
 export type Notification = Database['public']['Tables']['notifications']['Row']
 export type NotificationType = Notification['type']
 export type LeadStatus = Lead['status']
