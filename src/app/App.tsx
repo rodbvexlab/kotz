@@ -8,6 +8,7 @@ import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 import { ProposalPublicPage } from '@/features/proposals/ProposalPublicPage'
 import { ProposalsPage } from '@/features/proposals/ProposalsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { GlobalSearch } from '@/features/search/GlobalSearch'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, user, loading: authLoading } = useAuth()
@@ -28,7 +29,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/onboarding" replace />
   }
 
-  return <>{children}</>
+  return (
+    <>
+      <GlobalSearch />
+      {children}
+    </>
+  )
 }
 
 export function App() {
