@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'motion/react'
@@ -481,169 +482,220 @@ function ChannelDropdown({
 // ─── TemplateDrawer ──────────────────────────────────────────────────────────
 
 interface TemplateDrawerProps {
+  open: boolean
+  anchorRef: React.RefObject<HTMLButtonElement | null>
   lead: Lead
   onSelect: (body: string, channel: MessageTemplateChannel) => void
   onClose: () => void
 }
 
-function TemplateDrawer({ lead, onSelect, onClose }: TemplateDrawerProps) {
+function TemplateDrawer({ open, anchorRef, lead, onSelect, onClose }: TemplateDrawerProps) {
   const { templates, templatesByCategory, loading, substituteVariables } = useMessageTemplates()
   const [channelFilter, setChannelFilter] = useState<MessageTemplateChannel | 'todos'>('todos')
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const drawerRef = useRef<HTMLDivElement>(null)
+
+  // ── Compute position anchored to the button ────────────────────────────────
+  useEffect(() => {
+    if (open && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect()
+      const DRAWER_HEIGHT = 480
+      const DRAWER_WIDTH  = 320
+      const spaceBelow    = window.innerHeight - rect.bottom
+      const top = spaceBelow >= DRAWER_HEIGHT
+        ? rect.bottom + 8
+        : rect.top - DRAWER_HEIGHT - 8
+      const left = Math.max(8, Math.min(rect.right - DRAWER_WIDTH, window.innerWidth - DRAWER_WIDTH - 8))
+      setPosition({ top, left })
+    }
+  }, [open, anchorRef])
+
+  // ── Close on click outside ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!open) return
+    function handleMouseDown(e: MouseEvent) {
+      if (
+        drawerRef.current && !drawerRef.current.contains(e.target as Node) &&
+        anchorRef.current && !anchorRef.current.contains(e.target as Node)
+      ) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [open, onClose, anchorRef])
+
+  // ── Close on Esc ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!open) return
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [open, onClose])
 
   const filtered = channelFilter === 'todos'
     ? templates
     : templates.filter(t => t.channel === channelFilter)
 
-  // Group filtered templates by category in order
-  const orderedCategories = Object.keys(CATEGORY_META)
-    .sort((a, b) => CATEGORY_META[a as keyof typeof CATEGORY_META].order - CATEGORY_META[b as keyof typeof CATEGORY_META].order)
-    .filter(cat => filtered.some(t => t.category === cat)) as Array<keyof typeof CATEGORY_META>
+  const orderedCategories = (Object.keys(CATEGORY_META) as Array<keyof typeof CATEGORY_META>)
+    .sort((a, b) => CATEGORY_META[a].order - CATEGORY_META[b].order)
+    .filter(cat => filtered.some(t => t.category === cat))
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 6, scale: 0.97 }}
-      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute bottom-full left-0 mb-2 z-50 w-80 flex flex-col"
-      style={{
-        background:     'rgba(8,12,20,0.96)',
-        backdropFilter: 'blur(24px) saturate(160%)',
-        border:         '1px solid rgba(255,255,255,0.08)',
-        borderRadius:   '12px',
-        boxShadow:      '0 16px 48px rgba(0,0,0,0.70), 0 0 0 1px rgba(255,255,255,0.04)',
-        maxHeight:      '480px',
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
-        <div className="flex items-center gap-2">
-          <Zap size={13} className="text-[#FF6500]" />
-          <span className="text-[14px] font-semibold text-white">Templates</span>
-        </div>
-        <button
-          onClick={onClose}
-          className="w-6 h-6 flex items-center justify-center rounded-md text-[#A1B5CC] hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer"
+  // ── Drawer content ───────────────────────────────────────────────────────────
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={drawerRef}
+          initial={{ opacity: 0, scale: 0.95, y: -8 }}
+          animate={{ opacity: 1, scale: 1,    y:  0 }}
+          exit={{    opacity: 0, scale: 0.95, y: -8 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          style={{
+            position:       'fixed',
+            top:            position.top,
+            left:           position.left,
+            zIndex:         9999,
+            width:          320,
+            maxHeight:      480,
+            display:        'flex',
+            flexDirection:  'column',
+            background:     'rgba(8,12,20,0.96)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            border:         '1px solid rgba(255,255,255,0.09)',
+            borderRadius:   '12px',
+            boxShadow:      '0 8px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.06)',
+          }}
         >
-          <X size={13} />
-        </button>
-      </div>
-
-      {/* Channel filter chips */}
-      <div className="px-3 pt-3 pb-2 flex gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
-        {CHANNEL_FILTER_ORDER.map(ch => {
-          const meta = TEMPLATE_CHANNEL_META[ch]
-          const isActive = channelFilter === ch
-          return (
-            <button
-              key={ch}
-              onClick={() => setChannelFilter(ch)}
-              className="whitespace-nowrap text-[11px] font-medium transition-all duration-150 cursor-pointer shrink-0"
-              style={{
-                background:   isActive ? 'rgba(255,101,0,0.10)' : 'rgba(255,255,255,0.04)',
-                border:       `1px solid ${isActive ? 'rgba(255,101,0,0.35)' : 'rgba(255,255,255,0.08)'}`,
-                borderRadius: '6px',
-                padding:      '4px 10px',
-                color:        isActive ? '#FF6500' : '#A1B5CC',
-              }}
-            >
-              {meta.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Template list */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-4">
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="ds-spinner" />
-          </div>
-        ) : orderedCategories.length === 0 ? (
-          <p className="text-center text-[12px] text-[#A1B5CC]/50 py-8">
-            Nenhum template encontrado.
-          </p>
-        ) : (
-          orderedCategories.map(cat => (
-            <div key={cat}>
-              {/* Category label */}
-              <p
-                className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-2 px-0.5"
-                style={{ color: '#A1B5CC' }}
-              >
-                {CATEGORY_META[cat].label}
-              </p>
-
-              <div className="space-y-1.5">
-                {(templatesByCategory[cat] ?? [])
-                  .filter(t => channelFilter === 'todos' || t.channel === channelFilter)
-                  .map(tpl => {
-                    const chMeta = TEMPLATE_CHANNEL_META[tpl.channel]
-                    const preview = substituteVariables(tpl.body, lead)
-                    return (
-                      <button
-                        key={tpl.id}
-                        type="button"
-                        onClick={() => { onSelect(preview, tpl.channel); onClose() }}
-                        className="w-full text-left transition-all duration-150 cursor-pointer group"
-                        style={{
-                          background:   'rgba(255,255,255,0.04)',
-                          border:       '1px solid rgba(255,255,255,0.07)',
-                          borderRadius: '8px',
-                          padding:      '10px 12px',
-                        }}
-                        onMouseEnter={e => {
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,101,0,0.25)'
-                        }}
-                        onMouseLeave={e => {
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.07)'
-                        }}
-                      >
-                        {/* Title */}
-                        <p className="text-[13px] font-medium text-white leading-snug mb-1">
-                          {tpl.title}
-                        </p>
-                        {/* Preview */}
-                        <p
-                          className="text-[11px] leading-relaxed mb-2"
-                          style={{
-                            color: '#A1B5CC',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          {preview}
-                        </p>
-                        {/* Channel badge */}
-                        <span
-                          className="inline-flex items-center text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
-                          style={{
-                            color:      chMeta.color,
-                            background: chMeta.bg,
-                            border:     `1px solid ${chMeta.border}`,
-                          }}
-                        >
-                          {chMeta.label}
-                        </span>
-                      </button>
-                    )
-                  })
-                }
-              </div>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
+            <div className="flex items-center gap-2">
+              <Zap size={13} className="text-[#FF6500]" />
+              <span className="text-[14px] font-semibold text-white">Templates</span>
             </div>
-          ))
-        )}
-      </div>
+            <button
+              onClick={onClose}
+              className="w-6 h-6 flex items-center justify-center rounded-md text-[#A1B5CC] hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          </div>
 
-      {/* Footer */}
-      <div className="px-4 py-2.5 border-t border-white/[0.06] shrink-0">
-        <span className="text-[11px] text-[#FF6500]/60 cursor-default select-none">
-          Gerenciar templates →
-        </span>
-      </div>
-    </motion.div>
+          {/* Channel filter chips */}
+          <div className="px-3 pt-3 pb-2 flex gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
+            {CHANNEL_FILTER_ORDER.map(ch => {
+              const meta = TEMPLATE_CHANNEL_META[ch]
+              const isActive = channelFilter === ch
+              return (
+                <button
+                  key={ch}
+                  onClick={() => setChannelFilter(ch)}
+                  className="whitespace-nowrap text-[11px] font-medium transition-all duration-150 cursor-pointer shrink-0"
+                  style={{
+                    background:   isActive ? 'rgba(255,101,0,0.10)' : 'rgba(255,255,255,0.04)',
+                    border:       `1px solid ${isActive ? 'rgba(255,101,0,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: '6px',
+                    padding:      '4px 10px',
+                    color:        isActive ? '#FF6500' : '#A1B5CC',
+                  }}
+                >
+                  {meta.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Template list */}
+          <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-4">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="ds-spinner" />
+              </div>
+            ) : orderedCategories.length === 0 ? (
+              <p className="text-center text-[12px] text-[#A1B5CC]/50 py-8">
+                Nenhum template encontrado.
+              </p>
+            ) : (
+              orderedCategories.map(cat => (
+                <div key={cat}>
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-2 px-0.5"
+                    style={{ color: '#A1B5CC' }}
+                  >
+                    {CATEGORY_META[cat].label}
+                  </p>
+                  <div className="space-y-1.5">
+                    {(templatesByCategory[cat] ?? [])
+                      .filter(t => channelFilter === 'todos' || t.channel === channelFilter)
+                      .map(tpl => {
+                        const chMeta = TEMPLATE_CHANNEL_META[tpl.channel]
+                        const preview = substituteVariables(tpl.body, lead)
+                        return (
+                          <button
+                            key={tpl.id}
+                            type="button"
+                            onClick={() => { onSelect(preview, tpl.channel); onClose() }}
+                            className="w-full text-left transition-all duration-150 cursor-pointer"
+                            style={{
+                              background:   'rgba(255,255,255,0.04)',
+                              border:       '1px solid rgba(255,255,255,0.07)',
+                              borderRadius: '8px',
+                              padding:      '10px 12px',
+                            }}
+                            onMouseEnter={e => {
+                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,101,0,0.25)'
+                            }}
+                            onMouseLeave={e => {
+                              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.07)'
+                            }}
+                          >
+                            <p className="text-[13px] font-medium text-white leading-snug mb-1">
+                              {tpl.title}
+                            </p>
+                            <p
+                              className="text-[11px] leading-relaxed mb-2"
+                              style={{
+                                color: '#A1B5CC',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {preview}
+                            </p>
+                            <span
+                              className="inline-flex items-center text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
+                              style={{
+                                color:      chMeta.color,
+                                background: chMeta.bg,
+                                border:     `1px solid ${chMeta.border}`,
+                              }}
+                            >
+                              {chMeta.label}
+                            </span>
+                          </button>
+                        )
+                      })
+                    }
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-4 py-2.5 border-t border-white/[0.06] shrink-0">
+            <span className="text-[11px] text-[#FF6500]/60 cursor-default select-none">
+              Gerenciar templates →
+            </span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
   )
 }
 
@@ -667,6 +719,7 @@ export function LeadPanel({
   const [isSavingInteraction, setIsSavingInteraction] = useState(false)
   const [showTemplateDrawer, setShowTemplateDrawer] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const zapButtonRef = useRef<HTMLButtonElement>(null)
 
   // ── Edit mode state ─────────────────────────────────────────────────────────
   const [mode, setMode] = useState<'view' | 'edit'>('view')
@@ -1297,40 +1350,46 @@ export function LeadPanel({
                     })
                   }
 
-                  {/* ⚡ Templates button */}
-                  <div className="relative ml-auto">
-                    <button
-                      type="button"
-                      title="Templates rápidos"
-                      onClick={() => setShowTemplateDrawer(v => !v)}
-                      className="w-6 h-6 flex items-center justify-center rounded-md transition-all duration-150 cursor-pointer"
-                      style={{
-                        color: showTemplateDrawer ? '#FF6500' : '#A1B5CC',
-                        background: showTemplateDrawer ? 'rgba(255,101,0,0.08)' : 'transparent',
-                      }}
-                      onMouseEnter={e => { if (!showTemplateDrawer) (e.currentTarget as HTMLButtonElement).style.color = '#FF6500' }}
-                      onMouseLeave={e => { if (!showTemplateDrawer) (e.currentTarget as HTMLButtonElement).style.color = '#A1B5CC' }}
-                    >
-                      <Zap size={14} />
-                    </button>
+                  {/* ── Divider + chip Templates ── */}
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    {/* Divider vertical sutil */}
+                    <div className="w-px h-4 bg-white/[0.08]" />
 
-                    {/* Template Drawer */}
-                    <AnimatePresence>
-                      {showTemplateDrawer && lead && (
-                        <TemplateDrawer
-                          lead={lead}
-                          onSelect={(body, channel) => {
-                            setNewContent(body)
-                            const mapped = CHANNEL_TO_INTERACTION[channel]
-                            if (mapped) setSelectedType(mapped)
-                            setTimeout(() => textareaRef.current?.focus(), 50)
-                          }}
-                          onClose={() => setShowTemplateDrawer(false)}
-                        />
-                      )}
-                    </AnimatePresence>
+                    {/* Chip Templates */}
+                    <button
+                      ref={zapButtonRef}
+                      type="button"
+                      onClick={() => setShowTemplateDrawer(v => !v)}
+                      className="flex items-center gap-1 text-[11px] font-medium transition-all duration-150 cursor-pointer"
+                      style={{
+                        background:   showTemplateDrawer ? 'rgba(255,101,0,0.10)' : 'rgba(255,255,255,0.04)',
+                        border:       `1px solid ${showTemplateDrawer ? 'rgba(255,101,0,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                        borderRadius: '6px',
+                        padding:      '4px 10px',
+                        color:        showTemplateDrawer ? '#FF6500' : '#A1B5CC',
+                        transition:   'all 150ms ease',
+                      }}
+                    >
+                      <Zap size={12} />
+                      <span>Templates</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* Template Drawer — renderizado via Portal fora do modal */}
+                <TemplateDrawer
+                  open={showTemplateDrawer}
+                  anchorRef={zapButtonRef}
+                  lead={lead}
+                  onSelect={(body, channel) => {
+                    setNewContent(body)
+                    const mapped = CHANNEL_TO_INTERACTION[channel]
+                    if (mapped) setSelectedType(mapped)
+                    setShowTemplateDrawer(false)
+                    setTimeout(() => textareaRef.current?.focus(), 50)
+                  }}
+                  onClose={() => setShowTemplateDrawer(false)}
+                />
 
                 <form onSubmit={handleSaveInteraction} className="relative">
                   <textarea
