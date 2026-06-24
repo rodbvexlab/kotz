@@ -8,6 +8,7 @@ import {
   PlusCircle, Sparkles, Edit2, Check, Loader2,
   ChevronDown, Phone, Mail, Video, StickyNote,
   Send, Building, UserCircle, ClipboardList, Zap,
+  FileText, Copy, ExternalLink, Eye,
 } from 'lucide-react'
 import type { Lead, LeadStatus, LeadChannel } from '@/types/pipeline'
 import type { LeadInteraction, InteractionType, Company, Contact, MessageTemplateChannel } from '@/types/database'
@@ -18,6 +19,7 @@ import { useTasks } from '../hooks/useTasks'
 import { AUTOMATION_MARKER } from '@/lib/automations'
 import type { Task } from '@/types/database'
 import { useMessageTemplates, CATEGORY_META } from '../hooks/useMessageTemplates'
+import { useProposals } from '@/features/proposals/hooks/useProposals'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -761,6 +763,78 @@ export function LeadPanel({
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskDate, setNewTaskDate] = useState('')
   const [isSavingTask, setIsSavingTask] = useState(false)
+
+  // ── Proposals ─────────────────────────────────────────────────────────────
+  const { proposals, isLoading: loadingProposals, createProposal } = useProposals(lead?.id ?? null)
+  const [proposalForm, setProposalForm] = useState({ title: '', scope: '', value: '', validDays: '7' })
+  const [isCreatingProposal, setIsCreatingProposal] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  const activeProposal = proposals.find(p => p.status !== 'cancelled')
+
+  const handleCreateProposal = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!proposalForm.title.trim() || !lead) return
+    setIsCreatingProposal(true)
+
+    const rawValue = proposalForm.value.replace(/\D/g, '')
+    const numValue = rawValue ? parseInt(rawValue, 10) / 100 : null
+    const days = parseInt(proposalForm.validDays, 10) || 7
+    const validUntil = new Date()
+    validUntil.setDate(validUntil.getDate() + days)
+
+    await createProposal({
+      lead_id: lead.id,
+      title: proposalForm.title.trim(),
+      scope: proposalForm.scope.trim() || null,
+      value: numValue,
+      valid_until: validUntil.toISOString(),
+    })
+    setProposalForm({ title: '', scope: '', value: '', validDays: '7' })
+    setIsCreatingProposal(false)
+  }
+
+  const handleCopyLink = (slug: string) => {
+    const link = `${window.location.origin}/p/${slug}`
+    navigator.clipboard.writeText(link)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  const formatCurrencyInput = (raw: string) => {
+    const digits = raw.replace(/\D/g, '')
+    if (!digits) return ''
+    const num = parseInt(digits, 10) / 100
+    return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const handleSendProposalEmail = async (slug: string) => {
+    if (!lead) return
+    const contactId = lead.contact_id
+    if (!contactId) {
+      toast.error('Sem contato vinculado', { description: 'Adicione um contato com e-mail ao lead.', className: 'glass-card' })
+      return
+    }
+    const { data: contact } = await supabase.from('contacts').select('name, email').eq('id', contactId).single()
+    if (!contact?.email) {
+      toast.error('Contato sem e-mail', { description: 'O contato deste lead não possui e-mail cadastrado.', className: 'glass-card' })
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) return
+
+    const proposalLink = `${window.location.origin}/p/${slug}`
+    const res = await fetch('/api/send-proposal-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ to: contact.email, contactName: contact.name, leadName: lead.name, proposalLink }),
+    })
+    if (res.ok) {
+      toast.success('E-mail enviado', { description: `Proposta enviada para ${contact.email}`, className: 'glass-card' })
+    } else {
+      toast.error('Falha ao enviar e-mail', { className: 'glass-card' })
+    }
+  }
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1629,6 +1703,205 @@ export function LeadPanel({
                       )
                     })}
                   </div>
+                )}
+              </div>
+
+              {/* ── Divisor ── */}
+              <div className="h-px bg-[#1E3E62]/20" />
+
+              {/* ── Propostas ── */}
+              <div>
+                <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-3 flex items-center gap-1.5">
+                  <FileText size={11} className="text-[#A1B5CC]/60" />
+                  Propostas
+                  {activeProposal && (
+                    <span
+                      className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ml-1"
+                      style={{
+                        color: activeProposal.status === 'accepted' ? '#22C55E' : '#F59E0B',
+                        background: activeProposal.status === 'accepted' ? 'rgba(34,197,94,0.10)' : 'rgba(245,158,11,0.10)',
+                      }}
+                    >
+                      {activeProposal.status === 'accepted' ? 'Aceita' : activeProposal.status === 'draft' ? 'Rascunho' : 'Enviada'}
+                    </span>
+                  )}
+                </p>
+
+                {loadingProposals ? (
+                  <div className="flex justify-center py-4">
+                    <div className="ds-spinner" />
+                  </div>
+                ) : activeProposal ? (
+                  <div className="space-y-3">
+                    {/* Proposal card */}
+                    <div
+                      className="rounded-xl px-4 py-3.5"
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                      }}
+                    >
+                      <p className="text-[14px] font-semibold text-white leading-snug mb-1">
+                        {activeProposal.title}
+                      </p>
+                      {activeProposal.value != null && activeProposal.value > 0 && (
+                        <p className="text-[13px] font-mono" style={{ color: '#FF6500' }}>
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(activeProposal.value)}
+                        </p>
+                      )}
+                      {activeProposal.valid_until && (
+                        <p className="text-[11px] font-mono mt-1" style={{ color: '#A1B5CC' }}>
+                          Válida até {formatDate(activeProposal.valid_until)}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Link + Copy */}
+                    <div
+                      className="flex items-center gap-2 rounded-lg px-3 py-2.5"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                      <ExternalLink size={12} className="text-[#A1B5CC]/50 shrink-0" />
+                      <span className="text-[12px] font-mono text-[#A1B5CC] truncate flex-1">
+                        /p/{activeProposal.slug}
+                      </span>
+                      <motion.button
+                        type="button"
+                        onClick={() => handleCopyLink(activeProposal.slug)}
+                        className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-md transition-all duration-150 cursor-pointer shrink-0"
+                        style={{
+                          background: copiedLink ? 'rgba(34,197,94,0.10)' : 'rgba(255,101,0,0.10)',
+                          border: `1px solid ${copiedLink ? 'rgba(34,197,94,0.25)' : 'rgba(255,101,0,0.25)'}`,
+                          color: copiedLink ? '#22C55E' : '#FF6500',
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <AnimatePresence mode="wait">
+                          {copiedLink ? (
+                            <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}>
+                              <Check size={12} />
+                            </motion.span>
+                          ) : (
+                            <motion.span key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}>
+                              <Copy size={12} />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                        {copiedLink ? 'Copiado' : 'Copiar'}
+                      </motion.button>
+                    </div>
+
+                    {/* View tracking */}
+                    {(activeProposal.viewed_count > 0 || activeProposal.viewed_at) && (
+                      <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: '#A1B5CC' }}>
+                        <Eye size={11} className="text-[#A1B5CC]/50" />
+                        <span>
+                          Visualizada {activeProposal.viewed_count}x
+                          {activeProposal.viewed_at && (
+                            <> — última vez {formatInteractionDate(activeProposal.viewed_at)}</>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Send email */}
+                    <button
+                      type="button"
+                      onClick={() => handleSendProposalEmail(activeProposal.slug)}
+                      className="flex items-center gap-1.5 text-[12px] font-semibold transition-all duration-150 hover:brightness-110 cursor-pointer"
+                      style={{
+                        color: '#60A5FA',
+                        background: 'rgba(96,165,250,0.10)',
+                        border: '1px solid rgba(96,165,250,0.20)',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                      }}
+                    >
+                      <Mail size={13} />
+                      Enviar por E-mail
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCreateProposal} className="space-y-3">
+                    <input
+                      type="text"
+                      value={proposalForm.title}
+                      onChange={e => setProposalForm(f => ({ ...f, title: e.target.value }))}
+                      placeholder="Título da proposta"
+                      className="w-full rounded-xl px-3 py-2 text-[13px] text-white placeholder-white/25 outline-none transition-all duration-150"
+                      style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(255,101,0,0.50)' }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+                    />
+                    <textarea
+                      value={proposalForm.scope}
+                      onChange={e => setProposalForm(f => ({ ...f, scope: e.target.value }))}
+                      placeholder="Escopo — descreva as entregas do projeto..."
+                      rows={4}
+                      className="w-full rounded-xl px-3 py-2 text-[13px] text-white placeholder-white/25 outline-none resize-none transition-all duration-150"
+                      style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(255,101,0,0.50)' }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-widest">
+                          Valor (BRL)
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={proposalForm.value}
+                          onChange={e => setProposalForm(f => ({ ...f, value: formatCurrencyInput(e.target.value) }))}
+                          placeholder="R$ 0,00"
+                          className="w-full rounded-xl px-3 py-2 text-[13px] font-mono text-white placeholder-white/25 outline-none transition-all duration-150"
+                          style={{
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.10)',
+                          }}
+                          onFocus={e => { e.currentTarget.style.borderColor = 'rgba(255,101,0,0.50)' }}
+                          onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-widest">
+                          Validade (dias)
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="90"
+                          value={proposalForm.validDays}
+                          onChange={e => setProposalForm(f => ({ ...f, validDays: e.target.value }))}
+                          className="w-full rounded-xl px-3 py-2 text-[13px] font-mono text-white outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          style={{
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.10)',
+                          }}
+                          onFocus={e => { e.currentTarget.style.borderColor = 'rgba(255,101,0,0.50)' }}
+                          onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!proposalForm.title.trim() || isCreatingProposal}
+                      className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-white rounded-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-[0.98]"
+                      style={{
+                        background: isCreatingProposal ? 'rgba(255,101,0,0.55)' : 'linear-gradient(135deg, #FF6500 0%, #e85500 100%)',
+                        boxShadow: isCreatingProposal ? 'none' : '0 2px 8px rgba(255,101,0,0.30), inset 0 1px 0 rgba(255,255,255,0.15)',
+                      }}
+                    >
+                      {isCreatingProposal ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+                      Criar Proposta
+                    </button>
+                  </form>
                 )}
               </div>
 

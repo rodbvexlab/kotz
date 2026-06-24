@@ -35,10 +35,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Payload ─────────────────────────────────────────────────────────────────
-  const { to, contactName, leadName } = (req.body ?? {}) as {
+  const { to, contactName, leadName, proposalLink } = (req.body ?? {}) as {
     to?: string
     contactName?: string
     leadName?: string
+    proposalLink?: string
   }
 
   if (!to || typeof to !== 'string') {
@@ -53,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       from: fromEmail,
       to,
       subject: `Sua proposta da Kotz${leadName ? ` — ${leadName}` : ''}`,
-      html: buildTemplate(contactName ?? 'Olá'),
+      html: buildTemplate(contactName ?? 'Olá', proposalLink),
     })
     return res.status(200).json({ ok: true })
   } catch (err) {
@@ -62,7 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-function buildTemplate(contactName: string): string {
+function buildTemplate(contactName: string, proposalLink?: string): string {
+  const ctaHref = proposalLink || '#'
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -95,7 +97,7 @@ function buildTemplate(contactName: string): string {
               <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#A1B5CC;">
                 Estamos animados para trabalhar juntos.
               </p>
-              <a href="#" style="display:inline-block;background:#FF6500;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:10px;">
+              <a href="${ctaHref}" style="display:inline-block;background:#FF6500;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:10px;">
                 Ver minha proposta
               </a>
             </td>

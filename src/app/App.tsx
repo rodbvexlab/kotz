@@ -5,6 +5,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { PipelinePage } from '@/features/leads/PipelinePage'
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
+import { ProposalPublicPage } from '@/features/proposals/ProposalPublicPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, user, loading: authLoading } = useAuth()
@@ -70,6 +71,7 @@ export function App() {
           path="/leads"
           element={<ProtectedRoute><PipelinePage /></ProtectedRoute>}
         />
+        <Route path="/p/:slug" element={<ProposalPublicPage />} />
         <Route path="*" element={<Navigate to={session ? '/dashboard' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>
