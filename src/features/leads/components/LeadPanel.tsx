@@ -123,13 +123,16 @@ function formatInteractionDate(iso: string) {
 const INTERACTION_TYPES: Array<{
   type: InteractionType
   label: string
-  icon: React.ReactNode
+  emoji: string
   color: string
+  requiresPhone?: boolean
 }> = [
-  { type: 'note',    label: 'Nota',    icon: <StickyNote size={13} />, color: '#A1B5CC' },
-  { type: 'call',    label: 'Ligação', icon: <Phone size={13} />,     color: '#4ADE80' },
-  { type: 'email',   label: 'E-mail',  icon: <Mail size={13} />,      color: '#60A5FA' },
-  { type: 'meeting', label: 'Reunião', icon: <Video size={13} />,     color: '#F59E0B' },
+  { type: 'note',      label: 'Nota',      emoji: '📝', color: '#A1B5CC' },
+  { type: 'call',      label: 'Ligação',   emoji: '📞', color: '#4ADE80' },
+  { type: 'whatsapp',  label: 'WhatsApp',  emoji: '💬', color: '#4ADE80', requiresPhone: true },
+  { type: 'email',     label: 'E-mail',    emoji: '✉',  color: '#60A5FA' },
+  { type: 'meeting',   label: 'Reunião',   emoji: '🤝', color: '#F59E0B' },
+  { type: 'instagram', label: 'Instagram', emoji: '📸', color: '#F472B6' },
 ]
 
 function formatTaskDate(iso: string) {
@@ -150,7 +153,11 @@ function formatTaskDate(iso: string) {
 
 function getInteractionIcon(type: InteractionType) {
   const meta = INTERACTION_TYPES.find(t => t.type === type)
-  return { icon: meta?.icon ?? <StickyNote size={13} />, color: meta?.color ?? '#A1B5CC' }
+  return { emoji: meta?.emoji ?? '📝', color: meta?.color ?? '#A1B5CC' }
+}
+
+function cleanPhone(phone: string): string {
+  return phone.replace(/\D/g, '')
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -559,7 +566,17 @@ export function LeadPanel({
     if (!newContent.trim() || !lead) return
     setIsSavingInteraction(true)
     try {
-      await onAddInteraction(newContent.trim(), selectedType)
+      const content = newContent.trim()
+      await onAddInteraction(content, selectedType)
+
+      // Ação de canal: abrir WhatsApp ou e-mail após salvar
+      if (selectedType === 'whatsapp' && lead.phone) {
+        const cleaned = cleanPhone(lead.phone)
+        window.open(`https://wa.me/55${cleaned}?text=${encodeURIComponent(content)}`, '_blank')
+      } else if (selectedType === 'email' && lead.email) {
+        window.open(`mailto:${lead.email}?subject=Mensagem&body=${encodeURIComponent(content)}`, '_blank')
+      }
+
       setNewContent('')
       setSelectedType('note')
     } catch (err) {
@@ -738,6 +755,69 @@ export function LeadPanel({
                     </div>
                   )}
 
+                  {/* Phone + Email (view mode) */}
+                  {(lead.phone || lead.email) && (
+                    <div className="flex flex-col gap-1.5">
+                      {lead.phone && (
+                        <div className="bg-black/30 px-3 py-2 rounded-lg border border-[#1E3E62]/15 flex items-center gap-2">
+                          <Phone size={11} className="text-[#4ADE80]/60 shrink-0" />
+                          <p className="text-[13px] text-white font-mono">{lead.phone}</p>
+                        </div>
+                      )}
+                      {lead.email && (
+                        <div className="bg-black/30 px-3 py-2 rounded-lg border border-[#1E3E62]/15 flex items-center gap-2">
+                          <Mail size={11} className="text-[#60A5FA]/60 shrink-0" />
+                          <p className="text-[13px] text-white font-mono">{lead.email}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Ações Rápidas ── */}
+                  {(lead.phone || lead.email) && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-2">
+                        Ações Rápidas
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {lead.phone && (
+                          <a
+                            href={`https://wa.me/55${cleanPhone(lead.phone)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[12px] font-semibold transition-all duration-150 hover:brightness-110"
+                            style={{
+                              color: '#4ADE80',
+                              background: 'rgba(74,222,128,0.10)',
+                              border: '1px solid rgba(74,222,128,0.20)',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                            }}
+                          >
+                            <MessageCircle size={13} />
+                            WhatsApp
+                          </a>
+                        )}
+                        {lead.email && (
+                          <a
+                            href={`mailto:${lead.email}?subject=Olá ${encodeURIComponent(lead.name)}&body=Olá ${encodeURIComponent(lead.name)},`}
+                            className="inline-flex items-center gap-1.5 text-[12px] font-semibold transition-all duration-150 hover:brightness-110"
+                            style={{
+                              color: '#60A5FA',
+                              background: 'rgba(96,165,250,0.10)',
+                              border: '1px solid rgba(96,165,250,0.20)',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                            }}
+                          >
+                            <Mail size={13} />
+                            E-mail
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Notas */}
                   <div>
                     <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-wider mb-1.5">
@@ -829,6 +909,22 @@ export function LeadPanel({
                     onChange={v => setForm(f => ({ ...f, contact: v || null }))}
                     placeholder="@usuario, +55 11 9…"
                   />
+
+                  {/* Phone + Email */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <DSInput
+                      label="Telefone"
+                      value={form.phone ?? ''}
+                      onChange={v => setForm(f => ({ ...f, phone: v || null }))}
+                      placeholder="+55 11 99999-9999"
+                    />
+                    <DSInput
+                      label="E-mail"
+                      value={form.email ?? ''}
+                      onChange={v => setForm(f => ({ ...f, email: v || null }))}
+                      placeholder="email@cliente.com"
+                    />
+                  </div>
 
                   {/* Status + Channel em grid */}
                   <div className="grid grid-cols-2 gap-3 relative">
@@ -977,27 +1073,33 @@ export function LeadPanel({
                   Registrar Nova Interação
                 </p>
 
-                {/* Type toggle buttons */}
-                <div className="flex gap-1.5 mb-3">
-                  {INTERACTION_TYPES.map(({ type, label, icon, color }) => {
-                    const isActive = selectedType === type
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setSelectedType(type)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-150 cursor-pointer"
-                        style={{
-                          background: isActive ? `${color}15` : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${isActive ? `${color}40` : 'rgba(255,255,255,0.06)'}`,
-                          color: isActive ? color : 'rgba(161,181,204,0.6)',
-                        }}
-                      >
-                        {icon}
-                        <span className="hidden sm:inline">{label}</span>
-                      </button>
-                    )
-                  })}
+                {/* Type chips */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {INTERACTION_TYPES
+                    .filter(({ requiresPhone }) => !requiresPhone || !!lead?.phone)
+                    .map(({ type, label, emoji, color }) => {
+                      const isActive = selectedType === type
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setSelectedType(type)}
+                          className="flex items-center gap-1.5 text-[11px] font-medium transition-all duration-150 cursor-pointer"
+                          style={{
+                            background:   isActive ? 'rgba(255,101,0,0.10)' : 'rgba(255,255,255,0.04)',
+                            border:       `1px solid ${isActive ? 'rgba(255,101,0,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                            borderRadius: '6px',
+                            padding:      '4px 10px',
+                            color:        isActive ? '#FF6500' : '#A1B5CC',
+                            transition:   'all 150ms ease',
+                          }}
+                        >
+                          <span>{emoji}</span>
+                          <span>{label}</span>
+                        </button>
+                      )
+                    })
+                  }
                 </div>
 
                 <form onSubmit={handleSaveInteraction} className="relative">
@@ -1060,7 +1162,7 @@ export function LeadPanel({
                     <AnimatePresence initial={false}>
                       {sortedInteractions.map((item, idx) => {
                         const isNewest = idx === 0
-                        const { icon: typeIcon, color: typeColor } = getInteractionIcon(item.type ?? 'note')
+                        const { emoji: typeEmoji, color: typeColor } = getInteractionIcon(item.type ?? 'note')
 
                         return (
                           <motion.div
@@ -1081,7 +1183,7 @@ export function LeadPanel({
                                 color: isNewest ? typeColor : 'rgba(30,62,98,0.60)',
                               }}
                             >
-                              <span style={{ transform: 'scale(0.75)' }}>{typeIcon}</span>
+                               <span style={{ fontSize: '10px' }}>{typeEmoji}</span>
                             </div>
 
                             {/* Content card */}
@@ -1101,7 +1203,7 @@ export function LeadPanel({
                                     background: `${typeColor}12`,
                                   }}
                                 >
-                                  {INTERACTION_TYPES.find(t => t.type === (item.type ?? 'note'))?.label ?? 'Nota'}
+                                  {INTERACTION_TYPES.find(t => t.type === (item.type ?? 'note'))?.label ?? 'Nota'} {INTERACTION_TYPES.find(t => t.type === (item.type ?? 'note'))?.emoji ?? '📝'}
                                 </span>
                                 {item.content.includes(AUTOMATION_MARKER) && (
                                   <span
