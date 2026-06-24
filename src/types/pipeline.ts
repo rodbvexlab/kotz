@@ -48,3 +48,4 @@ export type PipelineAction =
   | { type: 'ROLLBACK'; snapshot: PipelineState }
   | { type: 'ADD_LEAD'; lead: Lead }
   | { type: 'UPDATE_LEAD'; lead: Lead }
+  | { type: 'REPLACE_TEMP_LEAD'; tempId: string; lead: Lead }

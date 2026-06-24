@@ -11,7 +11,7 @@ interface OrbProps {
 }
 
 export default function Orb({
-  hue = 20,           // laranja — próximo ao #FF6500
+  hue = 18,           // laranja — próximo ao #FF6500
   hoverIntensity = 0.3,
   rotateOnHover = true,
   forceHoverState = false,

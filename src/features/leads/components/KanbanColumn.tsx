@@ -21,12 +21,12 @@ export function KanbanColumn({ column, leads, isOver, onOpenLead, onAddLead }: K
   const isDrop = column.isDrop
 
   const style: React.CSSProperties = {
-    background: isDrop ? 'rgba(255,255,255,0.01)' : 'rgba(255, 255, 255, 0.03)',
+    background: isDrop ? 'rgba(255,255,255,0.01)' : 'rgba(255, 255, 255, 0.02)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     border: isOver && !isDrop
       ? '1px solid rgba(255, 101, 0, 0.40)'
-      : '1px solid rgba(255, 255, 255, 0.06)',
+      : '1px solid rgba(255, 255, 255, 0.05)',
     borderRadius: '14px',
     width: '256px',
     flexShrink: 0,

@@ -7,7 +7,7 @@ import type { Lead, LeadStatus } from '@/types/pipeline'
 
 export function useLeadsSync() {
   const { tenant, loading: tenantLoading } = useTenant()
-  const { state, init, moveCard, addLead, updateLead } = usePipeline()
+  const { state, init, moveCard, addLead, updateLead, replaceTempLead } = usePipeline()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -124,7 +124,7 @@ export function useLeadsSync() {
       // Substitui o lead temporário pelo real (com UUID do banco)
       if (data) {
         const realLead = { ...optimistic, id: data.id }
-        updateLead(realLead)
+        replaceTempLead(tempId, realLead)
         return realLead
       }
       return null

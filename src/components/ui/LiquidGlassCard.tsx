@@ -74,8 +74,8 @@ export function LiquidGlassCard({
       <div
         className={cn(
           'relative overflow-hidden rounded-[14px]',
-          'bg-white/[0.03] backdrop-blur-[24px] saturate-[175%]',
-          'border border-white/[0.05]',
+          'bg-white/[0.04] backdrop-blur-[24px] saturate-[170%]',
+          'border border-white/[0.08]',
           'transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
           className
         )}
@@ -87,7 +87,7 @@ export function LiquidGlassCard({
             borderColor: 'rgba(255, 255, 255, 0.10)',
             boxShadow: '0 12px 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.12)',
           } : {
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
+            boxShadow: '0 2px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06)',
           }),
         }}
         onMouseEnter={() => setIsHovered(true)}

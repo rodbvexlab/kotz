@@ -18,8 +18,14 @@ function pipelineReducer(state: PipelineState, action: PipelineAction): Pipeline
 
     case 'INIT': {
       const next = buildEmpty()
+      const seen = new Set<string>()
       for (const lead of action.payload) {
-        next[lead.status].push(lead)
+        if (lead && lead.id && !seen.has(lead.id)) {
+          seen.add(lead.id)
+          if (next[lead.status]) {
+            next[lead.status].push(lead)
+          }
+        }
       }
       return next
     }
@@ -54,6 +60,15 @@ function pipelineReducer(state: PipelineState, action: PipelineAction): Pipeline
       const next = { ...state }
       for (const status of Object.keys(next) as LeadStatus[]) {
         next[status] = next[status].map(l => l.id === lead.id ? lead : l)
+      }
+      return next
+    }
+
+    case 'REPLACE_TEMP_LEAD': {
+      const { tempId, lead } = action
+      const next = { ...state }
+      for (const status of Object.keys(next) as LeadStatus[]) {
+        next[status] = next[status].map(l => l.id === tempId ? lead : l)
       }
       return next
     }
@@ -106,5 +121,9 @@ export function usePipeline() {
     dispatch({ type: 'UPDATE_LEAD', lead })
   }, [])
 
-  return { state, init, moveCard, addLead, updateLead }
+  const replaceTempLead = useCallback((tempId: string, lead: Lead) => {
+    dispatch({ type: 'REPLACE_TEMP_LEAD', tempId, lead })
+  }, [])
+
+  return { state, init, moveCard, addLead, updateLead, replaceTempLead }
 }

@@ -8,7 +8,7 @@ import { usePendingTasks } from './hooks/usePendingTasks'
 import { AppNav } from '@/components/layout/AppNav'
 import { BentoGrid, BentoItem } from '@/components/ui/BentoGrid'
 import { UsageAnalyticsCard } from '@/components/ui/UsageAnalyticsCard'
-import { DotMatrixChart } from '@/components/ui/DotMatrixChart'
+import { PipelineStatusChart } from '@/components/ui/PipelineStatusChart'
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard'
 
 export function DashboardPage() {
@@ -98,7 +98,6 @@ export function DashboardPage() {
               value={m.total_leads}
               loading={loading}
               accentColor="#4A7FA5"
-              icon={<Users className="w-4 h-4" style={{ color: '#4A7FA5' }} />}
             />
           </BentoItem>
           <BentoItem>
@@ -107,7 +106,6 @@ export function DashboardPage() {
               value={m.total_propostas}
               loading={loading}
               accentColor="rgba(255,101,0,0.85)"
-              icon={<Send className="w-4 h-4" style={{ color: '#FF6500' }} />}
             />
           </BentoItem>
           <BentoItem>
@@ -116,7 +114,6 @@ export function DashboardPage() {
               value={m.fechados_mes}
               loading={loading}
               accentColor="#FF6500"
-              icon={<Trophy className="w-4 h-4" style={{ color: '#FF6500' }} />}
             />
           </BentoItem>
           <BentoItem>
@@ -125,7 +122,6 @@ export function DashboardPage() {
               value={m.taxa_conversao}
               loading={loading}
               accentColor="#22C55E"
-              icon={<TrendingUp className="w-4 h-4" style={{ color: '#22C55E' }} />}
             />
           </BentoItem>
         </BentoGrid>
@@ -342,7 +338,7 @@ export function DashboardPage() {
                   </p>
                 </div>
               ) : m.funnel.length > 0 && m.funnel.some(f => f.value > 0) ? (
-                <DotMatrixChart data={m.funnel} accentColor="#FF6500" rows={7} />
+                <PipelineStatusChart data={m.funnel} />
               ) : (
                 <div className="flex items-center justify-center min-h-[180px]">
                   <p className="text-[13px]" style={{ color: 'rgba(161,181,204,0.5)' }}>

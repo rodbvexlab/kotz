@@ -113,14 +113,14 @@ export function LeadCard({ lead, isDrop = false, onOpen }: LeadCardProps) {
   const statusColor = STATUS_COLOR[lead.status] || '#1E3E62'
 
   const style: React.CSSProperties = {
-    background: 'rgba(255, 255, 255, 0.04)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255, 255, 255, 0.07)',
+    background: 'rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(20px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+    border: '1px solid rgba(255, 255, 255, 0.09)',
     borderLeft: `3px solid ${statusColor}`,
-    borderRadius: '10px',
+    borderRadius: '12px',
     padding: '14px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
     cursor: isDragging ? 'grabbing' : 'grab',
     opacity: isDragging ? 0.5 : 1,
     transform: transform ? CSS.Transform.toString(transform) : undefined,

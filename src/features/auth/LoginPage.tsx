@@ -71,6 +71,28 @@ export function LoginPage() {
           content: "";
           animation: phrase-cycle 18s infinite;
         }
+        .login-input {
+          background: rgba(0,0,0,0.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          color: white !important;
+          border-radius: 8px !important;
+          transition: all 0.2s ease;
+        }
+        .login-input:focus {
+          border-color: rgba(255,101,0,0.50) !important;
+          box-shadow: 0 0 0 1px rgba(255,101,0,0.50) !important;
+          background: rgba(0,0,0,0.45) !important;
+        }
+        .login-input::placeholder {
+          color: rgba(161,181,204,0.50) !important;
+        }
+        .login-input:-webkit-autofill,
+        .login-input:-webkit-autofill:hover, 
+        .login-input:-webkit-autofill:focus {
+          -webkit-text-fill-color: white !important;
+          -webkit-box-shadow: 0 0 0px 1000px rgba(0,0,0,0.35) inset !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
       `}</style>
 
       {/* ─── LEFT: Login Form ──────────────────────────────────────────── */}
@@ -108,7 +130,7 @@ export function LoginPage() {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 font-semibold rounded-xl py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 cursor-pointer bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/15"
+              className="w-full flex items-center justify-center gap-3 font-semibold rounded-xl py-2.5 text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 cursor-pointer bg-white text-slate-900 border border-transparent hover:bg-slate-100"
             >
               <GoogleIcon />
               Continuar com Google
@@ -134,7 +156,7 @@ export function LoginPage() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all duration-200 bg-white/5 border border-white/10 text-white placeholder-white/40 focus:bg-white/10 focus:border-[#FF6500]/50 focus:ring-1 focus:ring-[#FF6500]/50"
+                  className="w-full login-input px-4 py-2.5 text-sm outline-none"
                 />
               </div>
 
@@ -149,7 +171,7 @@ export function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleEmailLogin()}
-                    className="w-full rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none transition-all duration-200 bg-white/5 border border-white/10 text-white placeholder-white/40 focus:bg-white/10 focus:border-[#FF6500]/50 focus:ring-1 focus:ring-[#FF6500]/50"
+                    className="w-full login-input pl-4 pr-10 py-2.5 text-sm outline-none"
                   />
                   <button
                     type="button"
@@ -197,7 +219,7 @@ export function LoginPage() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div style={{ width: '500px', height: '500px' }}>
             <Orb
-              hue={20}
+              hue={18}
               hoverIntensity={0.4}
               rotateOnHover={true}
               backgroundColor="transparent"
