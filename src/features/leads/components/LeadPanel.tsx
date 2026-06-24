@@ -31,6 +31,7 @@ export interface LeadPanelProps {
   onAddInteraction: (content: string, type?: InteractionType) => Promise<void>
   onUpdateLead: (updated: Lead) => void
   isNewLead?: boolean
+  initialTab?: LeadPanelTab
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -719,7 +720,8 @@ export function LeadPanel({
   loadingInteractions,
   onAddInteraction,
   onUpdateLead,
-  isNewLead,
+  isNewLead = false,
+  initialTab,
 }: LeadPanelProps) {
   const [, setSearchParams] = useSearchParams()
   const open = !!lead
@@ -778,7 +780,13 @@ export function LeadPanel({
   const [proposalForm, setProposalForm] = useState({ title: '', scope: '', value: '', validDays: '7' })
   const [isCreatingProposal, setIsCreatingProposal] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
-  const [activeTab, setActiveTab] = useState<LeadPanelTab>('dados')
+  const [activeTab, setActiveTab] = useState<LeadPanelTab>(initialTab || 'dados')
+
+  useEffect(() => {
+    if (lead && initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [lead, initialTab])
 
   const activeProposal = proposals.find(p => p.status !== 'cancelled')
 

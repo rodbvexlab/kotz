@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, BarChart2, LogOut } from 'lucide-react'
+import { LayoutGrid, BarChart2, LogOut, FileText, Settings } from 'lucide-react'
 import { useAuth } from '@/app/providers'
 import { useTenant } from '@/lib/tenant'
 
@@ -11,6 +11,8 @@ export function AppNav() {
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
     { to: '/pipeline',  label: 'Pipeline',  icon: LayoutGrid },
+    { to: '/proposals', label: 'Proposals', icon: FileText },
+    { to: '/settings',  label: 'Settings',  icon: Settings },
   ]
 
   const capitalize = (s: string) =>
@@ -41,8 +43,8 @@ export function AppNav() {
                   'flex items-center gap-2 px-3 py-1.5 rounded-lg',
                   'text-sm font-medium transition-all duration-150',
                   active
-                    ? 'bg-[#FF6500]/10 text-[#FF6500] border border-[#FF6500]/20'
-                    : 'text-[#1E3E62] hover:text-white hover:bg-[#1E3E62]/15 border border-transparent',
+                    ? 'bg-white/5 text-[#FF6500] border-b border-b-[#FF6500] rounded-b-none'
+                    : 'text-[#1E3E62] hover:text-white hover:bg-[#1E3E62]/15 border border-transparent border-b border-b-transparent',
                 ].join(' ')}
               >
                 <Icon size={14} />

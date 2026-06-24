@@ -4,6 +4,10 @@ import { useTenant } from '@/lib/tenant'
 import { toast } from 'sonner'
 import type { Proposal, WorkspaceSettings } from '@/types/database'
 
+export type ProposalWithLead = Proposal & {
+  leads?: { name: string } | null
+}
+
 function generateSlug(len = 7): string {
   const chars = 'abcdefghijkmnpqrstuvwxyz23456789'
   let slug = ''
@@ -22,7 +26,7 @@ interface CreateProposalData {
 
 export function useProposals(leadId?: string | null) {
   const { tenant } = useTenant()
-  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [proposals, setProposals] = useState<ProposalWithLead[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   const fetchProposals = useCallback(async () => {
@@ -30,7 +34,7 @@ export function useProposals(leadId?: string | null) {
     setIsLoading(true)
     const query = supabase
       .from('proposals')
-      .select('*')
+      .select('*, leads(name)')
       .eq('tenant_id', tenant.id)
       .order('created_at', { ascending: false })
 

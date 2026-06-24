@@ -183,7 +183,7 @@ function LightTemplate({ proposal, settings, primaryColor, accepted, accepting, 
   const isExpired = proposal.valid_until && new Date(proposal.valid_until) < new Date()
 
   return (
-    <div className="min-h-screen" style={{ background: '#ffffff' }}>
+    <div className="min-h-screen" style={{ background: '#ffffff', '--primary': primaryColor } as React.CSSProperties}>
       <AnimatePresence>{showConfetti && <ConfettiExplosion originY={confettiOrigin} />}</AnimatePresence>
 
       <div className="max-w-[680px] mx-auto px-6 py-16">
@@ -332,12 +332,13 @@ function DarkTemplate({ proposal, settings, primaryColor, accepted, accepting, o
       className="min-h-screen"
       style={{
         background: '#080c14',
+        '--primary': primaryColor,
         backgroundImage: `
           radial-gradient(ellipse 70% 50% at 15% 35%, rgba(30,62,98,0.22) 0%, transparent 60%),
           radial-gradient(ellipse 50% 40% at 85% 15%, rgba(30,62,98,0.14) 0%, transparent 55%),
           radial-gradient(ellipse 40% 55% at 50% 85%, rgba(11,25,44,0.35) 0%, transparent 65%)
         `,
-      }}
+      } as React.CSSProperties}
     >
       <AnimatePresence>{showConfetti && <ConfettiExplosion originY={confettiOrigin} />}</AnimatePresence>
 
