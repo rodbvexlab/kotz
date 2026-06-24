@@ -160,6 +160,8 @@ export interface Database {
           name: string
           channel: 'instagram' | 'whatsapp' | 'indicacao' | 'outro' | null
           contact: string | null
+          phone: string | null
+          email: string | null
           service: string | null
           status: 'novo' | 'em_contato' | 'proposta_enviada' | 'fechado' | 'perdido'
           notes: string | null
@@ -175,6 +177,8 @@ export interface Database {
           name: string
           channel?: 'instagram' | 'whatsapp' | 'indicacao' | 'outro' | null
           contact?: string | null
+          phone?: string | null
+          email?: string | null
           service?: string | null
           status?: 'novo' | 'em_contato' | 'proposta_enviada' | 'fechado' | 'perdido'
           notes?: string | null
@@ -190,6 +194,8 @@ export interface Database {
           name?: string
           channel?: 'instagram' | 'whatsapp' | 'indicacao' | 'outro' | null
           contact?: string | null
+          phone?: string | null
+          email?: string | null
           service?: string | null
           status?: 'novo' | 'em_contato' | 'proposta_enviada' | 'fechado' | 'perdido'
           notes?: string | null
@@ -239,7 +245,7 @@ export interface Database {
           id: string
           lead_id: string
           tenant_id: string
-          type: 'note' | 'call' | 'email' | 'meeting'
+          type: 'note' | 'call' | 'email' | 'meeting' | 'whatsapp' | 'instagram'
           content: string
           created_by: string | null
           created_at: string
@@ -248,7 +254,7 @@ export interface Database {
           id?: string
           lead_id: string
           tenant_id: string
-          type?: 'note' | 'call' | 'email' | 'meeting'
+          type?: 'note' | 'call' | 'email' | 'meeting' | 'whatsapp' | 'instagram'
           content: string
           created_by?: string | null
           created_at?: string
@@ -257,7 +263,7 @@ export interface Database {
           id?: string
           lead_id?: string
           tenant_id?: string
-          type?: 'note' | 'call' | 'email' | 'meeting'
+          type?: 'note' | 'call' | 'email' | 'meeting' | 'whatsapp' | 'instagram'
           content?: string
           created_by?: string | null
           created_at?: string

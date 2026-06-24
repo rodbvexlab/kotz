@@ -13,6 +13,8 @@ export interface Lead {
   name: string
   channel: LeadChannel | null
   contact: string | null
+  phone: string | null
+  email: string | null
   service: string | null
   status: LeadStatus
   notes: string | null

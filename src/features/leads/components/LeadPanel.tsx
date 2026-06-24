@@ -24,7 +24,7 @@ export interface LeadPanelProps {
   onClose: () => void
   interactions: LeadInteraction[]
   loadingInteractions: boolean
-  onAddInteraction: (content: string, type?: 'note' | 'call' | 'email' | 'meeting') => Promise<void>
+  onAddInteraction: (content: string, type?: InteractionType) => Promise<void>
   onUpdateLead: (updated: Lead) => void
   isNewLead?: boolean
 }
@@ -81,6 +81,8 @@ function toForm(lead: Lead): UpdateLeadPayload {
     service: lead.service,
     channel: lead.channel,
     contact: lead.contact,
+    phone:   lead.phone,
+    email:   lead.email,
     notes:   lead.notes,
     status:  lead.status,
     company: null,
@@ -467,6 +469,7 @@ export function LeadPanel({
   const [mode, setMode] = useState<'view' | 'edit'>('view')
   const [form, setForm] = useState<UpdateLeadPayload>(lead ? toForm(lead) : toForm({
     id: '', tenant_id: '', name: '', channel: null, contact: null,
+    phone: null, email: null,
     service: null, status: 'novo', notes: null, assigned_to: null,
     company_id: null, contact_id: null,
     created_at: '', updated_at: '',

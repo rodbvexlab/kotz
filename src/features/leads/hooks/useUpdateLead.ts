@@ -23,6 +23,8 @@ export interface UpdateLeadPayload {
   service: string | null
   channel: LeadChannel | null
   contact: string | null
+  phone: string | null
+  email: string | null
   notes: string | null
   status: LeadStatus
   company?: CompanyPayload | null
@@ -117,6 +119,8 @@ export function useUpdateLead() {
           service:    payload.service?.trim() || null,
           channel:    payload.channel,
           contact:    payload.contact?.trim() || null,
+          phone:      payload.phone?.trim() || null,
+          email:      payload.email?.trim() || null,
           notes:      payload.notes?.trim() || null,
           status:     payload.status,
           updated_at: new Date().toISOString(),

@@ -81,6 +81,8 @@ export function useLeadsSync() {
         name,
         channel: null,
         contact: null,
+        phone: null,
+        email: null,
         service: null,
         status,
         notes: null,
