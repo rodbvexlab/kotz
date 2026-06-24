@@ -6,16 +6,17 @@ import {
   X, Instagram, MessageCircle, Users, Calendar,
   PlusCircle, Sparkles, Edit2, Check, Loader2,
   ChevronDown, Phone, Mail, Video, StickyNote,
-  Send, Building, UserCircle, ClipboardList,
+  Send, Building, UserCircle, ClipboardList, Zap,
 } from 'lucide-react'
 import type { Lead, LeadStatus, LeadChannel } from '@/types/pipeline'
-import type { LeadInteraction, InteractionType, Company, Contact } from '@/types/database'
+import type { LeadInteraction, InteractionType, Company, Contact, MessageTemplateChannel } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useUpdateLead, type UpdateLeadPayload } from '../hooks/useUpdateLead'
 import { useTasks } from '../hooks/useTasks'
 import { AUTOMATION_MARKER } from '@/lib/automations'
 import type { Task } from '@/types/database'
+import { useMessageTemplates, CATEGORY_META } from '../hooks/useMessageTemplates'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -158,6 +159,30 @@ function getInteractionIcon(type: InteractionType) {
 
 function cleanPhone(phone: string): string {
   return phone.replace(/\D/g, '')
+}
+
+// ─── Template channel meta ────────────────────────────────────────────────────
+
+const TEMPLATE_CHANNEL_META: Record<
+  MessageTemplateChannel | 'todos',
+  { label: string; color: string; bg: string; border: string }
+> = {
+  todos:     { label: 'Todos',     color: '#A1B5CC', bg: 'rgba(161,181,204,0.08)', border: 'rgba(161,181,204,0.18)' },
+  whatsapp:  { label: 'WhatsApp',  color: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.20)'  },
+  email:     { label: 'E-mail',    color: '#60A5FA', bg: 'rgba(96,165,250,0.10)',  border: 'rgba(96,165,250,0.20)'  },
+  instagram: { label: 'Instagram', color: '#F472B6', bg: 'rgba(244,114,182,0.10)', border: 'rgba(244,114,182,0.20)' },
+  geral:     { label: 'Geral',     color: '#A1B5CC', bg: 'rgba(161,181,204,0.08)', border: 'rgba(161,181,204,0.18)' },
+}
+
+const CHANNEL_FILTER_ORDER: Array<MessageTemplateChannel | 'todos'> = [
+  'todos', 'whatsapp', 'email', 'instagram', 'geral',
+]
+
+// Maps template channel → interaction type chip
+const CHANNEL_TO_INTERACTION: Partial<Record<MessageTemplateChannel, InteractionType>> = {
+  whatsapp:  'whatsapp',
+  email:     'email',
+  instagram: 'instagram',
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -453,6 +478,175 @@ function ChannelDropdown({
   )
 }
 
+// ─── TemplateDrawer ──────────────────────────────────────────────────────────
+
+interface TemplateDrawerProps {
+  lead: Lead
+  onSelect: (body: string, channel: MessageTemplateChannel) => void
+  onClose: () => void
+}
+
+function TemplateDrawer({ lead, onSelect, onClose }: TemplateDrawerProps) {
+  const { templates, templatesByCategory, loading, substituteVariables } = useMessageTemplates()
+  const [channelFilter, setChannelFilter] = useState<MessageTemplateChannel | 'todos'>('todos')
+
+  const filtered = channelFilter === 'todos'
+    ? templates
+    : templates.filter(t => t.channel === channelFilter)
+
+  // Group filtered templates by category in order
+  const orderedCategories = Object.keys(CATEGORY_META)
+    .sort((a, b) => CATEGORY_META[a as keyof typeof CATEGORY_META].order - CATEGORY_META[b as keyof typeof CATEGORY_META].order)
+    .filter(cat => filtered.some(t => t.category === cat)) as Array<keyof typeof CATEGORY_META>
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 6, scale: 0.97 }}
+      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute bottom-full left-0 mb-2 z-50 w-80 flex flex-col"
+      style={{
+        background:     'rgba(8,12,20,0.96)',
+        backdropFilter: 'blur(24px) saturate(160%)',
+        border:         '1px solid rgba(255,255,255,0.08)',
+        borderRadius:   '12px',
+        boxShadow:      '0 16px 48px rgba(0,0,0,0.70), 0 0 0 1px rgba(255,255,255,0.04)',
+        maxHeight:      '480px',
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
+        <div className="flex items-center gap-2">
+          <Zap size={13} className="text-[#FF6500]" />
+          <span className="text-[14px] font-semibold text-white">Templates</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-6 h-6 flex items-center justify-center rounded-md text-[#A1B5CC] hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer"
+        >
+          <X size={13} />
+        </button>
+      </div>
+
+      {/* Channel filter chips */}
+      <div className="px-3 pt-3 pb-2 flex gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
+        {CHANNEL_FILTER_ORDER.map(ch => {
+          const meta = TEMPLATE_CHANNEL_META[ch]
+          const isActive = channelFilter === ch
+          return (
+            <button
+              key={ch}
+              onClick={() => setChannelFilter(ch)}
+              className="whitespace-nowrap text-[11px] font-medium transition-all duration-150 cursor-pointer shrink-0"
+              style={{
+                background:   isActive ? 'rgba(255,101,0,0.10)' : 'rgba(255,255,255,0.04)',
+                border:       `1px solid ${isActive ? 'rgba(255,101,0,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                borderRadius: '6px',
+                padding:      '4px 10px',
+                color:        isActive ? '#FF6500' : '#A1B5CC',
+              }}
+            >
+              {meta.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Template list */}
+      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-4">
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="ds-spinner" />
+          </div>
+        ) : orderedCategories.length === 0 ? (
+          <p className="text-center text-[12px] text-[#A1B5CC]/50 py-8">
+            Nenhum template encontrado.
+          </p>
+        ) : (
+          orderedCategories.map(cat => (
+            <div key={cat}>
+              {/* Category label */}
+              <p
+                className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-2 px-0.5"
+                style={{ color: '#A1B5CC' }}
+              >
+                {CATEGORY_META[cat].label}
+              </p>
+
+              <div className="space-y-1.5">
+                {(templatesByCategory[cat] ?? [])
+                  .filter(t => channelFilter === 'todos' || t.channel === channelFilter)
+                  .map(tpl => {
+                    const chMeta = TEMPLATE_CHANNEL_META[tpl.channel]
+                    const preview = substituteVariables(tpl.body, lead)
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => { onSelect(preview, tpl.channel); onClose() }}
+                        className="w-full text-left transition-all duration-150 cursor-pointer group"
+                        style={{
+                          background:   'rgba(255,255,255,0.04)',
+                          border:       '1px solid rgba(255,255,255,0.07)',
+                          borderRadius: '8px',
+                          padding:      '10px 12px',
+                        }}
+                        onMouseEnter={e => {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,101,0,0.25)'
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.07)'
+                        }}
+                      >
+                        {/* Title */}
+                        <p className="text-[13px] font-medium text-white leading-snug mb-1">
+                          {tpl.title}
+                        </p>
+                        {/* Preview */}
+                        <p
+                          className="text-[11px] leading-relaxed mb-2"
+                          style={{
+                            color: '#A1B5CC',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {preview}
+                        </p>
+                        {/* Channel badge */}
+                        <span
+                          className="inline-flex items-center text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
+                          style={{
+                            color:      chMeta.color,
+                            background: chMeta.bg,
+                            border:     `1px solid ${chMeta.border}`,
+                          }}
+                        >
+                          {chMeta.label}
+                        </span>
+                      </button>
+                    )
+                  })
+                }
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-2.5 border-t border-white/[0.06] shrink-0">
+        <span className="text-[11px] text-[#FF6500]/60 cursor-default select-none">
+          Gerenciar templates →
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export function LeadPanel({
@@ -471,6 +665,8 @@ export function LeadPanel({
   const [newContent, setNewContent] = useState('')
   const [selectedType, setSelectedType] = useState<InteractionType>('note')
   const [isSavingInteraction, setIsSavingInteraction] = useState(false)
+  const [showTemplateDrawer, setShowTemplateDrawer] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // ── Edit mode state ─────────────────────────────────────────────────────────
   const [mode, setMode] = useState<'view' | 'edit'>('view')
@@ -1073,11 +1269,11 @@ export function LeadPanel({
                   Registrar Nova Interação
                 </p>
 
-                {/* Type chips */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
+                {/* Type chips + ⚡ template button */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-3 relative">
                   {INTERACTION_TYPES
                     .filter(({ requiresPhone }) => !requiresPhone || !!lead?.phone)
-                    .map(({ type, label, emoji, color }) => {
+                    .map(({ type, label, emoji }) => {
                       const isActive = selectedType === type
                       return (
                         <button
@@ -1100,10 +1296,45 @@ export function LeadPanel({
                       )
                     })
                   }
+
+                  {/* ⚡ Templates button */}
+                  <div className="relative ml-auto">
+                    <button
+                      type="button"
+                      title="Templates rápidos"
+                      onClick={() => setShowTemplateDrawer(v => !v)}
+                      className="w-6 h-6 flex items-center justify-center rounded-md transition-all duration-150 cursor-pointer"
+                      style={{
+                        color: showTemplateDrawer ? '#FF6500' : '#A1B5CC',
+                        background: showTemplateDrawer ? 'rgba(255,101,0,0.08)' : 'transparent',
+                      }}
+                      onMouseEnter={e => { if (!showTemplateDrawer) (e.currentTarget as HTMLButtonElement).style.color = '#FF6500' }}
+                      onMouseLeave={e => { if (!showTemplateDrawer) (e.currentTarget as HTMLButtonElement).style.color = '#A1B5CC' }}
+                    >
+                      <Zap size={14} />
+                    </button>
+
+                    {/* Template Drawer */}
+                    <AnimatePresence>
+                      {showTemplateDrawer && lead && (
+                        <TemplateDrawer
+                          lead={lead}
+                          onSelect={(body, channel) => {
+                            setNewContent(body)
+                            const mapped = CHANNEL_TO_INTERACTION[channel]
+                            if (mapped) setSelectedType(mapped)
+                            setTimeout(() => textareaRef.current?.focus(), 50)
+                          }}
+                          onClose={() => setShowTemplateDrawer(false)}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 <form onSubmit={handleSaveInteraction} className="relative">
                   <textarea
+                    ref={textareaRef}
                     value={newContent}
                     onChange={e => setNewContent(e.target.value)}
                     onKeyDown={e => {
