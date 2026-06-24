@@ -21,26 +21,26 @@ export function UsageAnalyticsCard({
 
   const SPARKLINE_PATHS: Record<string, { path: string; fill: string }> = {
     'LEADS ATIVOS': {
-      path: 'M 0 18 C 30 18, 45 6, 60 12 C 75 18, 90 2, 120 4',
-      fill: 'M 0 18 C 30 18, 45 6, 60 12 C 75 18, 90 2, 120 4 L 120 24 L 0 24 Z',
+      path: 'M 0 30 C 30 30, 45 10, 60 20 C 75 30, 90 4, 120 7',
+      fill: 'M 0 30 C 30 30, 45 10, 60 20 C 75 30, 90 4, 120 7 L 120 40 L 0 40 Z',
     },
     'PROPOSTAS ENVIADAS': {
-      path: 'M 0 16 C 30 4, 45 20, 60 10 C 75 0, 90 14, 120 6',
-      fill: 'M 0 16 C 30 4, 45 20, 60 10 C 75 0, 90 14, 120 6 L 120 24 L 0 24 Z',
+      path: 'M 0 26 C 30 7, 45 34, 60 17 C 75 2, 90 24, 120 10',
+      fill: 'M 0 26 C 30 7, 45 34, 60 17 C 75 2, 90 24, 120 10 L 120 40 L 0 40 Z',
     },
     'FECHADOS NO MÊS': {
-      path: 'M 0 20 C 30 20, 45 14, 60 8 C 75 2, 90 2, 120 2',
-      fill: 'M 0 20 C 30 20, 45 14, 60 8 C 75 2, 90 2, 120 2 L 120 24 L 0 24 Z',
+      path: 'M 0 34 C 30 34, 45 24, 60 14 C 75 4, 90 4, 120 3',
+      fill: 'M 0 34 C 30 34, 45 24, 60 14 C 75 4, 90 4, 120 3 L 120 40 L 0 40 Z',
     },
     'TAXA DE CONVERSÃO': {
-      path: 'M 0 14 C 30 14, 45 6, 60 8 C 75 10, 90 4, 120 2',
-      fill: 'M 0 14 C 30 14, 45 6, 60 8 C 75 10, 90 4, 120 2 L 120 24 L 0 24 Z',
+      path: 'M 0 24 C 30 24, 45 10, 60 14 C 75 18, 90 6, 120 3',
+      fill: 'M 0 24 C 30 24, 45 10, 60 14 C 75 18, 90 6, 120 3 L 120 40 L 0 40 Z',
     },
   }
 
   const defaultSparkline = {
-    path: 'M 0 18 C 30 18, 45 6, 60 12 C 75 18, 90 2, 120 4',
-    fill: 'M 0 18 C 30 18, 45 6, 60 12 C 75 18, 90 2, 120 4 L 120 24 L 0 24 Z',
+    path: 'M 0 30 C 30 30, 45 10, 60 20 C 75 30, 90 4, 120 7',
+    fill: 'M 0 30 C 30 30, 45 10, 60 20 C 75 30, 90 4, 120 7 L 120 40 L 0 40 Z',
   }
 
   const sparkline = SPARKLINE_PATHS[normalizedLabel] || defaultSparkline
@@ -78,23 +78,24 @@ export function UsageAnalyticsCard({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="font-black leading-none tracking-[-2px] text-white mb-3"
-          style={{ fontSize: '56px', fontFamily: 'Inter, sans-serif' }}
+          className="font-black text-white mb-3"
+          style={{ fontSize: '56px', fontFamily: 'Inter, sans-serif', letterSpacing: '-3px', lineHeight: 1 }}
         >
           <CountUp target={value} />
         </motion.p>
       )}
 
-      {/* Sparkline SVG 24px height */}
-      <div className="h-6 w-full mt-2 select-none relative overflow-hidden">
+      {/* Sparkline SVG 40px height */}
+      <div className="w-full mt-2 select-none relative overflow-hidden" style={{ height: '40px' }}>
         <svg
-          viewBox="0 0 120 24"
-          className="w-full h-6 block"
+          viewBox="0 0 120 40"
+          className="w-full block"
+          style={{ height: '40px' }}
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={accentColor} stopOpacity="0.25" />
+              <stop offset="0%" stopColor={accentColor} stopOpacity="0.40" />
               <stop offset="100%" stopColor={accentColor} stopOpacity="0.00" />
             </linearGradient>
           </defs>
@@ -102,18 +103,19 @@ export function UsageAnalyticsCard({
             d={sparkline.path}
             fill="none"
             stroke={accentColor}
-            strokeWidth="1.5"
+            strokeWidth="2"
             strokeLinecap="round"
+            style={{ opacity: 0.80 }}
             initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1, ease: 'easeOut', delay: 0.1 }}
+            animate={{ pathLength: 1, opacity: 0.80 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
           />
           <motion.path
             d={sparkline.fill}
             fill={`url(#${gradId})`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
           />
         </svg>
       </div>

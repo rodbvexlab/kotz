@@ -188,6 +188,15 @@ const CHANNEL_TO_INTERACTION: Partial<Record<MessageTemplateChannel, Interaction
   instagram: 'instagram',
 }
 
+type LeadPanelTab = 'dados' | 'interacoes' | 'tarefas' | 'propostas'
+
+const TAB_ITEMS: Array<{ key: LeadPanelTab; label: string }> = [
+  { key: 'dados', label: 'Dados' },
+  { key: 'interacoes', label: 'Interações' },
+  { key: 'tarefas', label: 'Tarefas' },
+  { key: 'propostas', label: 'Propostas' },
+]
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 /** Input padronizado com estilo dark-luxury do design system §5 */
@@ -769,6 +778,7 @@ export function LeadPanel({
   const [proposalForm, setProposalForm] = useState({ title: '', scope: '', value: '', validDays: '7' })
   const [isCreatingProposal, setIsCreatingProposal] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [activeTab, setActiveTab] = useState<LeadPanelTab>('dados')
 
   const activeProposal = proposals.find(p => p.status !== 'cancelled')
 
@@ -867,6 +877,7 @@ export function LeadPanel({
       }
       setForm(base)
       setMode(isNewLead ? 'edit' : 'view')
+      setActiveTab('dados')
     }
   }, [lead?.id, isNewLead, company, contactPerson]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1016,9 +1027,42 @@ export function LeadPanel({
                 </button>
               </GlassCard>
 
+              {/* ── Tab Bar ── */}
+              <div className="flex shrink-0 px-6 gap-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                {TAB_ITEMS.map(tab => {
+                  const isActive = activeTab === tab.key
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      className="cursor-pointer transition-colors duration-150"
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '13px',
+                        fontWeight: isActive ? 600 : 500,
+                        color: isActive ? '#ffffff' : 'rgba(161,181,204,0.6)',
+                        borderBottom: isActive ? '2px solid #FF6500' : '2px solid transparent',
+                        background: 'none',
+                        border: 'none',
+                        borderBottomWidth: '2px',
+                        borderBottomStyle: 'solid',
+                        borderBottomColor: isActive ? '#FF6500' : 'transparent',
+                      }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(161,181,204,1)' }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(161,181,204,0.6)' }}
+                    >
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+
             {/* ── Content ── */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 overscroll-contain">
 
+              {activeTab === 'dados' && (
+              <>
               {/* ─ VIEW MODE: Status + Canal badges ─ */}
               {mode === 'view' && (
                 <div className="space-y-4">
@@ -1387,9 +1431,11 @@ export function LeadPanel({
                 </div>
               )}
 
-              {/* ── Divisor ── */}
-              <div className="h-px bg-[#1E3E62]/20" />
+              </>
+              )}
 
+              {activeTab === 'interacoes' && (
+              <>
               {/* ── Nova Interação ── */}
               <div>
                 <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-3">
@@ -1596,9 +1642,11 @@ export function LeadPanel({
                 )}
               </div>
 
-              {/* ── Divisor ── */}
-              <div className="h-px bg-[#1E3E62]/20" />
+              </>
+              )}
 
+              {activeTab === 'tarefas' && (
+              <>
               {/* ── Tarefas / Follow-ups ── */}
               <div>
                 <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-3 flex items-center gap-1.5">
@@ -1706,9 +1754,11 @@ export function LeadPanel({
                 )}
               </div>
 
-              {/* ── Divisor ── */}
-              <div className="h-px bg-[#1E3E62]/20" />
+              </>
+              )}
 
+              {activeTab === 'propostas' && (
+              <>
               {/* ── Propostas ── */}
               <div>
                 <p className="text-[10px] font-semibold text-[#A1B5CC] uppercase tracking-[0.12em] mb-3 flex items-center gap-1.5">
@@ -1904,6 +1954,9 @@ export function LeadPanel({
                   </form>
                 )}
               </div>
+
+              </>
+              )}
 
             </div>
 

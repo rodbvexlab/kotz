@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
 import { Users, Send, Trophy, TrendingUp, ClipboardList, AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useTenant } from '@/lib/tenant'
 import { useDashboardMetrics } from './hooks/useDashboardMetrics'
 import { useChartData } from './hooks/useChartData'
 import { usePendingTasks } from './hooks/usePendingTasks'
+import { useToday } from './hooks/useToday'
 import { AppNav } from '@/components/layout/AppNav'
 import { BentoGrid, BentoItem } from '@/components/ui/BentoGrid'
 import { UsageAnalyticsCard } from '@/components/ui/UsageAnalyticsCard'
@@ -16,6 +18,8 @@ export function DashboardPage() {
   const { metrics, loading } = useDashboardMetrics()
   const { data: chartData, loading: chartLoading } = useChartData()
   const { tasks: pendingTasks, loading: tasksLoading } = usePendingTasks()
+  const { data: todayData } = useToday()
+  const navigate = useNavigate()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const tenantName = (tenant?.name ?? '').replace(/\b\w/g, c => c.toUpperCase())
@@ -89,6 +93,64 @@ export function DashboardPage() {
             Visão geral do seu funil de prospecção
           </p>
         </motion.div>
+
+        {/* ─── Seção HOJE ─────────────────────────────────────────────────── */}
+        {todayData && (todayData.leads_need_attention > 0 || todayData.proposals_no_view > 0 || todayData.closed_this_week > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className="rounded-[14px]"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              padding: '16px 20px',
+            }}
+          >
+            <p
+              className="text-[10px] font-semibold uppercase tracking-wider mb-2"
+              style={{ color: '#A1B5CC' }}
+            >
+              Hoje
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {todayData.leads_need_attention > 0 && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/pipeline')}
+                  className="flex items-center gap-2 py-1.5 text-[13px] text-white transition-opacity duration-150 hover:opacity-75 cursor-pointer text-left"
+                  style={{ background: 'none', border: 'none' }}
+                >
+                  <span style={{ color: '#F59E0B' }}>⚡</span>
+                  <span>
+                    {todayData.leads_need_attention} lead{todayData.leads_need_attention > 1 ? 's' : ''} precisam de atenção
+                  </span>
+                </button>
+              )}
+              {todayData.proposals_no_view > 0 && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/pipeline')}
+                  className="flex items-center gap-2 py-1.5 text-[13px] text-white transition-opacity duration-150 hover:opacity-75 cursor-pointer text-left"
+                  style={{ background: 'none', border: 'none' }}
+                >
+                  <span style={{ color: '#60A5FA' }}>📄</span>
+                  <span>
+                    {todayData.proposals_no_view} proposta{todayData.proposals_no_view > 1 ? 's' : ''} sem visualização há +3 dias
+                  </span>
+                </button>
+              )}
+              {todayData.closed_this_week > 0 && (
+                <div className="flex items-center gap-2 py-1.5 text-[13px] text-white">
+                  <span style={{ color: '#22C55E' }}>🎉</span>
+                  <span>
+                    {todayData.closed_this_week} fechamento{todayData.closed_this_week > 1 ? 's' : ''} esta semana — bom trabalho!
+                  </span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* ─── Bento Grid: Metric Cards ──────────────────────────────────── */}
         <BentoGrid className="md:grid-cols-4">
