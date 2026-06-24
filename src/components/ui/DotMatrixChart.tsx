@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 interface DotMatrixChartProps {
   data: Array<{ label: string; value: number }>
   accentColor?: string
+  colors?: string[]
   rows?: number
   cols?: number
 }
@@ -11,8 +12,8 @@ interface DotMatrixChartProps {
 export function DotMatrixChart({
   data,
   accentColor = '#FF6500',
+  colors,
   rows = 8,
-  cols = 10,
 }: DotMatrixChartProps) {
   const maxValue = Math.max(...data.map(d => d.value), 1)
 
@@ -58,9 +59,9 @@ export function DotMatrixChart({
                       width: dotSize,
                       height: dotSize,
                       borderRadius: '50%',
-                      background: isFilled ? accentColor : 'rgba(255,255,255,0.08)',
+                      background: isFilled ? (colors?.[colIdx] ?? accentColor) : 'rgba(255,255,255,0.08)',
                       boxShadow: isFilled
-                        ? `0 0 ${dotSize}px ${accentColor}40`
+                        ? `0 0 ${dotSize}px ${(colors?.[colIdx] ?? accentColor)}40`
                         : 'none',
                     }}
                   />
@@ -74,7 +75,7 @@ export function DotMatrixChart({
               animate={{ opacity: 1 }}
               transition={{ delay: colIdx * 0.06 + 0.3 }}
               className="text-[10px] font-mono tabular-nums"
-              style={{ color: accentColor, fontFamily: 'JetBrains Mono, monospace' }}
+              style={{ color: colors?.[colIdx] ?? accentColor, fontFamily: 'JetBrains Mono, monospace' }}
             >
               {col.value}
             </motion.span>

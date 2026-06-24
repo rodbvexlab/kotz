@@ -51,7 +51,7 @@ export function UsageAnalyticsCard({
         padding: '22px 24px',
         transition: 'opacity 400ms ease',
         opacity: loading ? 0.5 : 1,
-        borderLeft: `3px solid ${accentColor}`,
+        border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
       <div className="mb-3">

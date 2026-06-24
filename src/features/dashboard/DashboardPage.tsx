@@ -8,7 +8,7 @@ import { usePendingTasks } from './hooks/usePendingTasks'
 import { AppNav } from '@/components/layout/AppNav'
 import { BentoGrid, BentoItem } from '@/components/ui/BentoGrid'
 import { UsageAnalyticsCard } from '@/components/ui/UsageAnalyticsCard'
-import { PipelineStatusChart } from '@/components/ui/PipelineStatusChart'
+import { DotMatrixChart } from '@/components/ui/DotMatrixChart'
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard'
 
 export function DashboardPage() {
@@ -338,7 +338,18 @@ export function DashboardPage() {
                   </p>
                 </div>
               ) : m.funnel.length > 0 && m.funnel.some(f => f.value > 0) ? (
-                <PipelineStatusChart data={m.funnel} />
+                <DotMatrixChart
+                  data={m.funnel}
+                  colors={m.funnel.map(f => {
+                    const n = f.label.toLowerCase()
+                    if (n.includes('novo')) return '#1E3E62'
+                    if (n.includes('contato')) return '#FF6500'
+                    if (n.includes('proposta')) return '#F59E0B'
+                    if (n.includes('fechado')) return '#22C55E'
+                    if (n.includes('perdido')) return '#52525B'
+                    return '#1E3E62'
+                  })}
+                />
               ) : (
                 <div className="flex items-center justify-center min-h-[180px]">
                   <p className="text-[13px]" style={{ color: 'rgba(161,181,204,0.5)' }}>
